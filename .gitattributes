@@ -1,0 +1,61 @@
+# Auto-detect text files and normalize line endings to LF on commit.
+# Working tree may keep native line endings (controlled by core.autocrlf),
+# but the repository always stores LF, suppressing CRLF/LF warnings.
+* text=auto eol=lf
+
+# ----- Explicit text files -----
+*.ts        text eol=lf
+*.tsx       text eol=lf
+*.js        text eol=lf
+*.jsx       text eol=lf
+*.mjs       text eol=lf
+*.cjs       text eol=lf
+*.json      text eol=lf
+*.html      text eol=lf
+*.css       text eol=lf
+*.scss      text eol=lf
+*.md        text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.svg       text eol=lf
+*.txt       text eol=lf
+
+# Files that must keep CRLF on Windows
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+*.ps1       text eol=crlf
+
+# Shell scripts must keep LF
+*.sh        text eol=lf
+
+# ----- Binary files -----
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.webp      binary
+*.bmp       binary
+*.ico       binary
+*.icns      binary
+*.pdf       binary
+*.zip       binary
+*.tar       binary
+*.tar.gz    binary
+*.tgz       binary
+*.7z        binary
+*.exe       binary
+*.dll       binary
+*.dmg       binary
+*.app       binary
+*.node      binary
+*.wasm      binary
+*.woff      binary
+*.woff2     binary
+*.ttf       binary
+*.otf       binary
+*.eot       binary
+*.mp3       binary
+*.mp4       binary
+*.mov       binary
+*.webm      binary
+*.lyricdeck binary
