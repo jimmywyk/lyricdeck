@@ -97,6 +97,7 @@ export const zhTW: Translations = {
     shortcuts: 'Space/→ 下一張  |  ← 上一張  |  B 黑幕  |  C 清除  |  P 投影  |  Esc 還原',
     shiftUp: '上移',
     shiftDown: '下移',
+    scrollSpeed: '速度',
   },
 
   // Settings

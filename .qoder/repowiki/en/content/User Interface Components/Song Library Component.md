@@ -10,7 +10,14 @@
 - [index.ts](file://src/types/index.ts)
 - [App.tsx](file://src/App.tsx)
 - [seedData.ts](file://src/utils/seedData.ts)
+- [EditorPanel.tsx](file://src/components/EditorPanel.tsx)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Updated Song Creation section to reflect enhanced automatic song title generation with localized section numbering
+- Added documentation for the new section numbering pattern using localized section type names
+- Enhanced internationalization implementation details for improved user experience
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -25,6 +32,8 @@
 
 ## Introduction
 The Song Library component is the primary song management interface in LyricDeck, providing a searchable, sortable, and interactive list of songs. It integrates with the Zustand store for state management, supports internationalization across multiple languages, and offers preparation list integration for quick access during presentations. This document explains the component's search and filtering functionality, sorting capabilities, interactive song list display, SongItem sub-component architecture, internationalization implementation, and integration patterns with the broader application.
+
+**Updated** Enhanced with automatic song title generation featuring proper section numbering using localized section type names for a more professional initial user experience in internationalized deployments.
 
 ## Project Structure
 The Song Library resides in the components layer alongside other panels and integrates with shared stores and types. The application bootstraps by loading persisted data or seeding initial songs, then renders the main layout with the Song Library as the left-hand panel.
@@ -72,7 +81,10 @@ Key responsibilities:
 - Interactive display: Hover-triggered action buttons, selection highlighting, preparation list indicators.
 - Preparation list integration: Add/remove songs to/from the preparation list.
 - CRUD operations: Add, duplicate, delete songs via store actions.
+- **Enhanced Song Creation**: Automatic generation of new song titles with proper section numbering using localized section type names for professional initial user experience.
 - Accessibility and responsiveness: Hover-triggered actions, responsive layout, and keyboard-friendly interactions.
+
+**Updated** Enhanced song creation now automatically generates titles with proper section numbering using localized section type names, improving the initial user experience in internationalized deployments.
 
 **Section sources**
 - [SongLibrary.tsx:8-95](file://src/components/SongLibrary.tsx#L8-L95)
@@ -92,17 +104,19 @@ participant UI as "SongLibrary.tsx"
 participant Store as "useAppStore"
 participant I18n as "useI18n"
 participant Types as "types/index.ts"
-UI->>I18n : t.songLibrary.searchPlaceholder
+UI->>I18n : t.sectionTypes.Verse + ' 1'
 UI->>Store : subscribe to songs, selectedSongId, searchQuery, preparationList
 UI->>UI : compute filteredSongs and sort
 UI->>Store : setSearchQuery(query)
 UI->>Store : selectSong(id)
 UI->>Store : addToPreparationList(id)
-UI->>Store : addSong()
+UI->>Store : addSong(defaultSectionLabel)
 UI->>Store : deleteSong(id)
 UI->>Store : duplicateSong(id)
 Store->>Types : Song type definition
 ```
+
+**Updated** Enhanced with automatic section numbering using localized section type names for improved initial user experience.
 
 **Diagram sources**
 - [SongLibrary.tsx:8-95](file://src/components/SongLibrary.tsx#L8-L95)
@@ -114,11 +128,13 @@ Store->>Types : Song type definition
 
 ### SongLibrary Component
 Responsibilities:
-- Renders search input bound to the store’s searchQuery.
+- Renders search input bound to the store's searchQuery.
 - Provides sort controls toggling between song ID and title.
 - Filters and sorts the song list using computed logic.
 - Displays a message when no results are found or when no songs exist.
-- Offers an add song button invoking store action.
+- Offers an add song button invoking store action with automatic section numbering.
+
+**Enhanced** The add song button now automatically generates new song titles with proper section numbering using localized section type names.
 
 Filtering logic:
 - If no search query is present, all songs are included.
@@ -167,6 +183,27 @@ RenderList --> End(["Done"])
 
 **Diagram sources**
 - [SongLibrary.tsx:14-35](file://src/components/SongLibrary.tsx#L14-L35)
+
+### Song Creation and Section Numbering
+**Enhanced** The song creation process now automatically generates professional initial titles with proper section numbering.
+
+When users click the "Add Song" button, the system:
+1. Retrieves the localized section type name for "Verse" from the internationalization store
+2. Appends " 1" to create the default section label "Verse 1"
+3. Creates a new song with this properly formatted section label
+4. Generates a professional initial user experience with localized section naming
+
+This approach ensures that:
+- New songs always have a properly formatted section label
+- Section numbering follows the localized naming conventions
+- Users get a professional initial experience regardless of their language preference
+- The system maintains consistency across different locales
+
+**Section sources**
+- [SongLibrary.tsx:88-91](file://src/components/SongLibrary.tsx#L88-L91)
+- [appStore.ts:116-142](file://src/store/appStore.ts#L116-L142)
+- [en.ts:54-62](file://src/i18n/en.ts#L54-L62)
+- [zhTW.ts:56-64](file://src/i18n/zhTW.ts#L56-L64)
 
 ### SongItem Sub-component
 Responsibilities:
@@ -220,12 +257,15 @@ Item->>Store : deleteSong(songId) [confirmed]
 - [appStore.ts:317-325](file://src/store/appStore.ts#L317-L325)
 
 ### Internationalization Implementation
+**Enhanced** The internationalization system now provides localized section type names for automatic song title generation.
+
 The i18n store manages locale selection and exposes translated strings. The Song Library uses translation keys for:
 - Search placeholder
 - Sort controls
 - No results/no songs messages
 - Action tooltips (duplicate, delete)
 - Preparation list integration labels
+- **Section type names for automatic song creation**
 
 Supported locales:
 - English (default)
@@ -233,6 +273,8 @@ Supported locales:
 
 Storage:
 - Locale preference is persisted in localStorage and restored on initialization.
+
+**Enhanced** Section type names are now available for automatic song title generation, ensuring professional initial user experience across different languages.
 
 **Section sources**
 - [index.ts:1-43](file://src/i18n/index.ts#L1-L43)
@@ -242,6 +284,8 @@ Storage:
 - [SongLibrary.tsx:50-61](file://src/components/SongLibrary.tsx#L50-L61)
 - [SongLibrary.tsx:81-83](file://src/components/SongLibrary.tsx#L81-L83)
 - [SongLibrary.tsx:147-177](file://src/components/SongLibrary.tsx#L147-L177)
+- [en.ts:54-62](file://src/i18n/en.ts#L54-L62)
+- [zhTW.ts:56-64](file://src/i18n/zhTW.ts#L56-L64)
 
 ### Zustand Store Integration
 State and actions:
@@ -250,15 +294,19 @@ State and actions:
 - Preparation list actions include add, remove, reorder, clear, and selection from the list.
 - Persistence actions load and save songs/settings/preparation list to disk.
 
+**Enhanced** Song creation now accepts a default section label parameter for automatic section numbering.
+
 Song creation:
-- New songs receive default metadata, a single section, and timestamps.
+- New songs receive default metadata, a single section with the provided label, and timestamps.
+- The default section label uses localized section type names for professional initial experience.
 
 Preparation list persistence:
 - When enabled, preparation list changes are sent to the Electron main process for saving.
 
 **Section sources**
 - [appStore.ts:31-96](file://src/store/appStore.ts#L31-L96)
-- [appStore.ts:116-183](file://src/store/appStore.ts#L116-L183)
+- [appStore.ts:116-142](file://src/store/appStore.ts#L116-L142)
+- [appStore.ts:186-200](file://src/store/appStore.ts#L186-L200)
 - [appStore.ts:317-359](file://src/store/appStore.ts#L317-L359)
 - [appStore.ts:362-384](file://src/store/appStore.ts#L362-L384)
 
@@ -349,6 +397,10 @@ Common issues and resolutions:
 - Preparation list not persisting:
   - Confirm Electron main process IPC is available and saving the list.
   - Verify addToPreparationList and removeFromPreparationList actions are invoked.
+- **Enhanced** New song section numbering issues:
+  - Verify that localized section type names are properly loaded from the i18n store.
+  - Check that the defaultSectionLabel parameter is correctly passed to addSong action.
+  - Ensure t.sectionTypes.Verse returns a valid localized string.
 
 **Section sources**
 - [App.tsx:19-32](file://src/App.tsx#L19-L32)
@@ -358,4 +410,8 @@ Common issues and resolutions:
 - [appStore.ts:317-325](file://src/store/appStore.ts#L317-L325)
 
 ## Conclusion
-The Song Library component provides a robust, internationalized, and accessible interface for managing songs in LyricDeck. Its search and filtering logic covers essential metadata fields, while flexible sorting and preparation list integration streamline workflow. Integrated with Zustand for state management and Electron for persistence, it forms a cohesive part of the application’s architecture. Future enhancements could include debounced search, virtualized lists, and expanded accessibility features such as keyboard navigation and ARIA attributes.
+The Song Library component provides a robust, internationalized, and accessible interface for managing songs in LyricDeck. Its search and filtering logic covers essential metadata fields, while flexible sorting and preparation list integration streamline workflow. Integrated with Zustand for state management and Electron for persistence, it forms a cohesive part of the application's architecture.
+
+**Enhanced** The recent improvements to automatic song title generation with proper section numbering using localized section type names significantly improve the initial user experience in internationalized deployments, creating a more professional and consistent interface across different languages and locales.
+
+Future enhancements could include debounced search, virtualized lists, expanded accessibility features such as keyboard navigation and ARIA attributes, and further refinement of the automatic section numbering system for even more sophisticated initial song creation patterns.

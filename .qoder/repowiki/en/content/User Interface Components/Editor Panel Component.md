@@ -10,10 +10,18 @@
 - [SongLibrary.tsx](file://src/components/SongLibrary.tsx)
 - [en.ts](file://src/i18n/en.ts)
 - [index.ts](file://src/i18n/index.ts)
+- [zhTW.ts](file://src/i18n/zhTW.ts)
 - [seedData.ts](file://src/utils/seedData.ts)
 - [package.json](file://package.json)
 - [README.md](file://README.md)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Enhanced EditorPanel component to pass localized section type names to addSection function
+- Updated section type management documentation to reflect internationalization improvements
+- Added documentation for the new localizedTypeName parameter in addSection store action
+- Updated examples to demonstrate proper internationalization handling for new sections
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -30,8 +38,10 @@
 ## Introduction
 The Editor Panel is the primary interface for creating and editing lyric sections within a song. It provides a rich text editing experience, supports multiple section types (verse, chorus, bridge, intro, outro, instrumental, and custom), and offers real-time preview capabilities. The component integrates tightly with the global state store for persistence and synchronization across the application, and it participates in the broader song creation pipeline alongside the Arrange Panel and Presentation features.
 
+**Updated** The Editor Panel now ensures newly created sections inherit proper internationalization support by passing localized section type names to the addSection function, maintaining consistency across the application's data flow regardless of the user's language preference.
+
 ## Project Structure
-The Editor Panel resides in the components directory and is integrated into the main application shell. It relies on the global Zustand store for data management and uses internationalization for UI text. The component’s responsibilities include rendering song metadata, managing section lists, enabling section creation and deletion, and providing a live preview of the presentation output.
+The Editor Panel resides in the components directory and is integrated into the main application shell. It relies on the global Zustand store for data management and uses internationalization for UI text. The component's responsibilities include rendering song metadata, managing section lists, enabling section creation and deletion, and providing a live preview of the presentation output.
 
 ```mermaid
 graph TB
@@ -41,6 +51,7 @@ App --> Library["SongLibrary.tsx<br/>Song selection"]
 Editor --> Store["appStore.ts<br/>Global state"]
 Editor --> Types["types/index.ts<br/>Data models"]
 Editor --> I18N["i18n/en.ts<br/>Translations"]
+Editor --> I18N_ZH["i18n/zhTW.ts<br/>Chinese Traditional"]
 Store --> Types
 Store --> Seed["utils/seedData.ts<br/>Sample data"]
 ```
@@ -53,6 +64,7 @@ Store --> Seed["utils/seedData.ts<br/>Sample data"]
 - [appStore.ts:98-385](file://src/store/appStore.ts#L98-L385)
 - [index.ts:1-89](file://src/types/index.ts#L1-L89)
 - [en.ts:1-180](file://src/i18n/en.ts#L1-L180)
+- [zhTW.ts:1-180](file://src/i18n/zhTW.ts#L1-L180)
 - [seedData.ts:1-165](file://src/utils/seedData.ts#L1-L165)
 
 **Section sources**
@@ -61,6 +73,7 @@ Store --> Seed["utils/seedData.ts<br/>Sample data"]
 - [appStore.ts:98-385](file://src/store/appStore.ts#L98-L385)
 - [index.ts:1-89](file://src/types/index.ts#L1-L89)
 - [en.ts:1-180](file://src/i18n/en.ts#L1-L180)
+- [zhTW.ts:1-180](file://src/i18n/zhTW.ts#L1-L180)
 - [seedData.ts:1-165](file://src/utils/seedData.ts#L1-L165)
 
 ## Core Components
@@ -101,9 +114,9 @@ Section->>Store : updateSection(songId, sectionId, updates)
 Store-->>Editor : State updated
 Editor->>Preview : Re-render preview with updated lyrics
 User->>Editor : Add new section
-Editor->>Store : addSection(songId, type)
-Store-->>Editor : New section appended
-Editor->>Preview : Append new preview card
+Editor->>Store : addSection(songId, type, localizedTypeName)
+Store-->>Editor : New section appended with localized type
+Editor->>Preview : Append new preview card with localized type
 User->>Editor : Delete section
 Editor->>Store : deleteSection(songId, sectionId)
 Store-->>Editor : Section removed
@@ -128,6 +141,8 @@ Highlights:
 - Real-time preview synchronized with presentation settings.
 - Responsive layout with a main editor area and a fixed-width preview panel.
 
+**Updated** The Editor Panel now passes localized section type names to the addSection function, ensuring newly created sections inherit proper internationalization support from the outset.
+
 ```mermaid
 flowchart TD
 Start(["Render EditorPanel"]) --> FetchSong["Fetch selected song from store"]
@@ -135,7 +150,7 @@ FetchSong --> HasSong{"Song selected?"}
 HasSong --> |No| PromptSelect["Prompt to select a song"]
 HasSong --> |Yes| RenderMeta["Render song metadata inputs"]
 RenderMeta --> RenderSections["Map sections to SectionEditor components"]
-RenderSections --> AddSection["Render AddSectionButton"]
+RenderSections --> AddSection["Render AddSectionButton with localized types"]
 AddSection --> Preview["Render SlidePreview"]
 Preview --> End(["Ready"])
 PromptSelect --> End
@@ -143,9 +158,11 @@ PromptSelect --> End
 
 **Diagram sources**
 - [EditorPanel.tsx:17-118](file://src/components/EditorPanel.tsx#L17-L118)
+- [EditorPanel.tsx:107](file://src/components/EditorPanel.tsx#L107)
 
 **Section sources**
 - [EditorPanel.tsx:17-118](file://src/components/EditorPanel.tsx#L17-L118)
+- [EditorPanel.tsx:107](file://src/components/EditorPanel.tsx#L107)
 
 ### SectionEditor
 Each lyric section is rendered by the SectionEditor component. It supports:
@@ -156,7 +173,7 @@ Each lyric section is rendered by the SectionEditor component. It supports:
 
 Behavior:
 - Toggling collapse expands or hides the lyrics editor.
-- Changing type updates the section’s type in the store.
+- Changing type updates the section's type in the store.
 - Updating label or lyrics triggers updateSection with partial updates.
 - Delete button opens a confirmation dialog before removing the section.
 
@@ -192,7 +209,9 @@ SectionEditor --> LyricSection : "renders"
 - [index.ts:3-11](file://src/types/index.ts#L3-L11)
 
 ### AddSectionButton
-The AddSectionButton provides a dropdown menu of section types. When a type is selected, it triggers addSection in the store, which creates a new section with an auto-generated label based on existing sections of the same type.
+The AddSectionButton provides a dropdown menu of section types. When a type is selected, it triggers addSection in the store with three parameters: songId, type, and localizedTypeName. The localizedTypeName parameter ensures newly created sections inherit proper internationalization support from the outset.
+
+**Updated** The AddSectionButton now passes `t.sectionTypes[type]` as the third parameter to the addSection function, ensuring newly created sections have properly localized labels.
 
 ```mermaid
 sequenceDiagram
@@ -202,17 +221,19 @@ participant Store as "useAppStore"
 User->>Button : Click "Add Section"
 Button->>Button : Show dropdown menu
 User->>Button : Select a type
-Button->>Store : addSection(songId, type)
-Store-->>Button : New section added
+Button->>Store : addSection(songId, type, t.sectionTypes[type])
+Store-->>Button : New section added with localized type
 Button->>Button : Hide menu
 ```
 
 **Diagram sources**
 - [EditorPanel.tsx:178-208](file://src/components/EditorPanel.tsx#L178-L208)
+- [EditorPanel.tsx:107](file://src/components/EditorPanel.tsx#L107)
 - [appStore.ts:185-199](file://src/store/appStore.ts#L185-L199)
 
 **Section sources**
 - [EditorPanel.tsx:178-208](file://src/components/EditorPanel.tsx#L178-L208)
+- [EditorPanel.tsx:107](file://src/components/EditorPanel.tsx#L107)
 - [appStore.ts:185-199](file://src/store/appStore.ts#L185-L199)
 
 ### SlidePreview
@@ -240,27 +261,33 @@ NextSection --> |No| End(["Done"])
 - [EditorPanel.tsx:248-263](file://src/components/EditorPanel.tsx#L248-L263)
 
 ### Section Type Management
-The Editor Panel defines a fixed set of section types and localizes their labels. The store’s addSection action automatically assigns labels based on existing sections of the same type.
+The Editor Panel defines a fixed set of section types and localizes their labels. The store's addSection action automatically assigns labels based on existing sections of the same type, using the localizedTypeName parameter when provided.
 
 Supported section types:
 - Intro, Verse, Pre-Chorus, Chorus, Bridge, Instrumental, Outro, Custom
 
+**Updated** Section type management now includes enhanced internationalization support:
+- When adding a new section, the store checks for the localizedTypeName parameter.
+- If provided, the store uses the localizedTypeName for the section label; otherwise, it falls back to the original type.
+- The type selector dropdown uses localized labels from the translation resources.
+
 Validation and labeling:
-- When adding a new section, the store counts existing sections of the same type and generates a label like “Type 1”, “Type 2”, etc.
+- When adding a new section, the store counts existing sections of the same type and generates a label like "LocalizedType 1", "LocalizedType 2", etc.
 - The type selector dropdown uses localized labels from the translation resources.
 
 **Section sources**
 - [EditorPanel.tsx:6-15](file://src/components/EditorPanel.tsx#L6-L15)
-- [appStore.ts:185-199](file://src/store/appStore.ts#L185-L199)
+- [appStore.ts:185-200](file://src/store/appStore.ts#L185-L200)
 - [en.ts:53-62](file://src/i18n/en.ts#L53-L62)
+- [zhTW.ts:54-64](file://src/i18n/zhTW.ts#L54-L64)
 
 ### Dynamic Section Creation and Deletion
 Creation:
-- The AddSectionButton invokes addSection with a chosen type.
-- The store appends a new section to the song’s sections array and persists the change.
+- The AddSectionButton invokes addSection with a chosen type and localizedTypeName.
+- The store appends a new section to the song's sections array with the proper localized label and persists the change.
 
 Deletion:
-- The SectionEditor’s delete button triggers deleteSection.
+- The SectionEditor's delete button triggers deleteSection.
 - The store removes the section from the sections array and from the arrangement if present.
 - Confirmation prompts ensure accidental deletions are prevented.
 
@@ -289,12 +316,12 @@ end
 - [appStore.ts:210-216](file://src/store/appStore.ts#L210-L216)
 
 ### Drag-and-Drop Reordering System
-While the Editor Panel itself does not implement drag-and-drop reordering, the Arrange Panel uses @dnd-kit to reorder sections in the presentation arrangement. The Editor Panel’s section list is ordered by the song’s sections array, which is managed by the store’s reorderSections action.
+While the Editor Panel itself does not implement drag-and-drop reordering, the Arrange Panel uses @dnd-kit to reorder sections in the presentation arrangement. The Editor Panel's section list is ordered by the song's sections array, which is managed by the store's reorderSections action.
 
 Integration points:
-- The Arrange Panel’s DndContext and SortableContext manage drag-and drop.
+- The Arrange Panel's DndContext and SortableContext manage drag-and drop.
 - On drag end, the Arrange Panel computes a new arrangement order and calls setArrangement.
-- The store’s reorderSections updates the sections array to reflect the new order.
+- The store's reorderSections updates the sections array to reflect the new order.
 
 Note: The Editor Panel does not expose a drag-and-drop mechanism for reordering sections within the editor; the Arrange Panel is the designated place for arranging sections for presentation.
 
@@ -306,7 +333,7 @@ Note: The Editor Panel does not expose a drag-and-drop mechanism for reordering 
 The Song Library provides duplication of entire songs, which includes duplicating all sections. This is useful for creating variations or drafts of a song without manually copying each section.
 
 Workflow:
-- The SongLibrary’s duplicateSong action clones a song, remaps section IDs, and updates the arrangement accordingly.
+- The SongLibrary's duplicateSong action clones a song, remaps section IDs, and updates the arrangement accordingly.
 - The new song is persisted to the store and selected.
 
 **Section sources**
@@ -315,9 +342,9 @@ Workflow:
 
 ### Real-Time Preview Capabilities
 The SlidePreview component updates immediately when section content changes because:
-- The store’s updateSection action modifies the sections array.
+- The store's updateSection action modifies the sections array.
 - The Editor Panel re-renders the preview panel whenever the store updates.
-- The preview reads the current song’s sections and presentation settings.
+- The preview reads the current song's sections and presentation settings.
 
 Formatting options reflected in the preview:
 - Background type and value (color, gradient, image).
@@ -335,8 +362,10 @@ The Editor Panel relies on the global Zustand store for:
 - Persisting changes to disk via saveToDisk.
 - Providing localized text via the i18n store.
 
+**Updated** The store's addSection action now accepts an optional localizedTypeName parameter to ensure proper internationalization support for newly created sections.
+
 Key store actions used:
-- updateSong, addSection, updateSection, deleteSection, reorderSections.
+- updateSong, addSection (enhanced with localizedTypeName), updateSection, deleteSection, reorderSections.
 - setProjectionState and goToSlide for presentation integration.
 
 **Section sources**
@@ -375,9 +404,9 @@ These settings influence the SlidePreview rendering and are persisted via the st
 
 ### Examples of Section Manipulation Workflows
 - Add a new section:
-  - Click “Add Section” in the Editor Panel.
+  - Click "Add Section" in the Editor Panel.
   - Choose a type from the dropdown.
-  - The store appends a new section with an auto-generated label.
+  - The store appends a new section with an auto-generated label using the localized type name.
 - Edit a section:
   - Expand the section editor (toggle arrow).
   - Modify type, label, or lyrics.
@@ -389,6 +418,8 @@ These settings influence the SlidePreview rendering and are persisted via the st
 - Duplicate a song:
   - Use the duplicate action in the Song Library.
   - Creates a copy with remapped section IDs and arrangement.
+
+**Updated** Examples now reflect the enhanced internationalization support for newly created sections.
 
 **Section sources**
 - [EditorPanel.tsx:178-208](file://src/components/EditorPanel.tsx#L178-L208)
@@ -403,7 +434,7 @@ While the Editor Panel does not define dedicated shortcuts, the overall applicat
 - C: Toggle clear (hide lyrics, keep background)
 - Escape: Return to live mode
 
-These shortcuts apply when the presentation window is active, complementing the Editor Panel’s editing workflow.
+These shortcuts apply when the presentation window is active, complementing the Editor Panel's editing workflow.
 
 **Section sources**
 - [README.md:106-115](file://README.md#L106-L115)
@@ -429,6 +460,7 @@ graph TB
 Editor["EditorPanel.tsx"] --> Store["appStore.ts"]
 Editor --> Types["types/index.ts"]
 Editor --> I18N["i18n/en.ts"]
+Editor --> I18N_ZH["i18n/zhTW.ts"]
 Editor --> Arrange["ArrangePanel.tsx"]
 Arrange --> Store
 Library["SongLibrary.tsx"] --> Store
@@ -454,14 +486,15 @@ Store --> Seed["utils/seedData.ts"]
 - Preview optimization: SlidePreview renders only visible sections and applies styles dynamically without heavy computations.
 - Store persistence: Changes are batched and persisted asynchronously to avoid blocking the UI.
 
-[No sources needed since this section provides general guidance]
-
 ## Troubleshooting Guide
 Common issues and resolutions:
 - No song selected: The Editor Panel displays a prompt to select a song from the library. Switch to the Song Library panel and select a song.
 - Section not appearing: Ensure the section has a valid label and lyrics. Verify that the section is not accidentally deleted.
-- Preview not updating: Confirm that the store is persisting changes. If not, check for errors in the store’s saveToDisk action.
+- Preview not updating: Confirm that the store is persisting changes. If not, check for errors in the store's saveToDisk action.
 - Drag-and-drop not working in the Editor Panel: The Editor Panel does not support drag-and-drop reordering. Use the Arrange Panel instead.
+- Localized section types not displaying correctly: Ensure the i18n store is properly initialized and the user's locale is set correctly.
+
+**Updated** Added troubleshooting guidance for localized section type display issues.
 
 **Section sources**
 - [EditorPanel.tsx:22-28](file://src/components/EditorPanel.tsx#L22-L28)
@@ -470,7 +503,7 @@ Common issues and resolutions:
 ## Conclusion
 The Editor Panel provides a focused, efficient interface for lyric section editing within the LyricDeck application. Its tight integration with the global state store ensures data consistency and enables seamless collaboration with other panels. While it does not implement drag-and-drop reordering, it offers robust section creation, editing, and real-time preview capabilities essential for the song creation pipeline.
 
-[No sources needed since this section summarizes without analyzing specific files]
+**Updated** The enhanced internationalization support ensures that newly created sections inherit proper localization from the outset, maintaining consistency across the application's data flow regardless of the user's language preference.
 
 ## Appendices
 
@@ -488,12 +521,37 @@ The Editor Panel works with the following data models:
 ### Appendix B: Internationalization
 The Editor Panel uses the i18n store to render localized text for placeholders, buttons, and messages. Ensure the locale is set appropriately for consistent user experience.
 
+**Updated** The Editor Panel now passes localized section type names to the addSection function, ensuring newly created sections inherit proper internationalization support from the outset.
+
 **Section sources**
 - [en.ts:35-50](file://src/i18n/en.ts#L35-L50)
+- [en.ts:53-62](file://src/i18n/en.ts#L53-L62)
 - [index.ts:35-43](file://src/i18n/index.ts#L35-L43)
+- [zhTW.ts:54-64](file://src/i18n/zhTW.ts#L54-L64)
 
 ### Appendix C: Sample Data
 The application includes seed data to demonstrate typical song structures with various section types and lyrics.
 
 **Section sources**
 - [seedData.ts:51-165](file://src/utils/seedData.ts#L51-L165)
+
+### Appendix D: Enhanced Section Creation Flow
+**Updated** The section creation process now includes enhanced internationalization support:
+
+```mermaid
+flowchart TD
+Start(["User selects section type"]) --> GetLocalizedName["Get localized type name from t.sectionTypes[type]"]
+GetLocalizedName --> CallAddSection["Call addSection(songId, type, localizedTypeName)"]
+CallAddSection --> CheckParams{"localizedTypeName provided?"}
+CheckParams --> |Yes| UseLocalized["Use localizedTypeName for section label"]
+CheckParams --> |No| UseOriginal["Use original type for section label"]
+UseLocalized --> CreateSection["Create new section with localized label"]
+UseOriginal --> CreateSection
+CreateSection --> UpdateStore["Update store with new section"]
+UpdateStore --> RenderPreview["Render preview with localized type"]
+RenderPreview --> End(["Section created with proper localization"])
+```
+
+**Diagram sources**
+- [EditorPanel.tsx:107](file://src/components/EditorPanel.tsx#L107)
+- [appStore.ts:185-200](file://src/store/appStore.ts#L185-L200)

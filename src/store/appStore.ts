@@ -75,7 +75,7 @@ interface AppStore {
   prevSlide: () => void;
   setProjectionMode: (mode: ProjectionState['mode']) => void;
   setIsProjectionOpen: (open: boolean) => void;
-  shiftLines: (offset: number) => void;
+  shiftLines: (offset: number, durationSec?: number) => void;
 
   // Actions - UI
   setActiveTab: (tab: AppStore['activeTab']) => void;
@@ -297,9 +297,12 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   setIsProjectionOpen: (open) => set({ isProjectionOpen: open }),
 
-  shiftLines: (offset) => {
+  shiftLines: (offset, durationSec) => {
     const current = get().projectionState.lineOffset || 0;
-    get().setProjectionState({ lineOffset: current + offset });
+    get().setProjectionState({
+      lineOffset: current + offset,
+      scrollDuration: durationSec ?? 0,
+    });
   },
 
   // UI actions

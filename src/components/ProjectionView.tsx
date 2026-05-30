@@ -108,12 +108,16 @@ export function ProjectionView() {
         >
           {state.mode === 'live' && state.lyrics && (
             <p
-              className="whitespace-pre-line max-w-[85%] transition-transform duration-200"
+              className="whitespace-pre-line max-w-[85%]"
               style={{
                 ...getTextStyle(),
                 transform: state.lineOffset
                   ? `translateY(${-state.lineOffset * state.textStyle.fontSize * state.textStyle.lineHeight}px)`
                   : undefined,
+                transition:
+                  state.scrollDuration && state.scrollDuration > 0
+                    ? `transform ${state.scrollDuration}s linear`
+                    : 'none',
               }}
             >
               {state.lyrics}

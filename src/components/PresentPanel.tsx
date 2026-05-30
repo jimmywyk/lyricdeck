@@ -22,6 +22,7 @@ export function PresentPanel() {
   const song = songs.find((s) => s.id === selectedSongId);
   const [displays, setDisplays] = useState<any[]>([]);
   const [selectedDisplay, setSelectedDisplay] = useState<string>('');
+  const [scrollSpeed, setScrollSpeed] = useState<number>(0);
 
   // Load displays
   useEffect(() => {
@@ -163,179 +164,208 @@ export function PresentPanel() {
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Section Buttons */}
-        <div className="w-64 border-r border-surface-700 p-3 overflow-y-auto">
-          <h3 className="text-xs font-medium text-surface-400 mb-2 uppercase tracking-wide">
-            {t.present.sections}
-          </h3>
-          <div className="space-y-1">
-            {arrangement.map((sectionId, index) => {
-              const section = song.sections.find((s) => s.id === sectionId);
-              if (!section) return null;
-              const isActive = index === currentArrangementIndex;
-              return (
-                <button
-                  key={`${sectionId}-${index}`}
-                  onClick={() => goToSlide(index)}
-                  className={`section-btn w-full text-left ${
-                    isActive ? 'section-btn-active' : 'section-btn-inactive'
-                  }`}
+        {/* Main column: sections grid + bottom previews + controls */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Section Grid (enlarged area) */}
+          <div className="flex-1 overflow-y-auto p-3">
+            <h3 className="text-xs font-medium text-surface-400 mb-2 uppercase tracking-wide">
+              {t.present.sections}
+            </h3>
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+              {arrangement.map((sectionId, index) => {
+                const section = song.sections.find((s) => s.id === sectionId);
+                if (!section) return null;
+                const isActive = index === currentArrangementIndex;
+                const allLines = section.lyrics.split('\n');
+                const hint =
+                  allLines.slice(0, 4).join('\n') + (allLines.length > 4 ? ' ...' : '');
+                return (
+                  <button
+                    key={`${sectionId}-${index}`}
+                    onClick={() => goToSlide(index)}
+                    className={`text-left p-2 rounded-lg border transition-colors ${
+                      isActive
+                        ? 'bg-primary-600/20 border-primary-500'
+                        : 'bg-surface-800 border-surface-700 hover:bg-surface-700'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs text-surface-400">{index + 1}</span>
+                      <span className="text-sm font-medium text-white truncate">
+                        {section.label}
+                      </span>
+                    </div>
+                    <pre className="text-xs text-surface-300 whitespace-pre-wrap font-sans leading-snug min-h-[3.5rem] overflow-hidden">
+                      {hint || t.editor.empty}
+                    </pre>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Bottom: previews + controls */}
+          <div className="border-t border-surface-700 p-3 space-y-3">
+            {/* Current and Next Preview (smaller, side-by-side) */}
+            <div className="flex gap-3 h-28">
+              {/* Current Slide */}
+              <div className="flex-1 flex flex-col min-w-0">
+                <h4 className="text-xs font-medium text-surface-400 mb-1 uppercase">
+                  {t.present.current}
+                </h4>
+                <div
+                  className="flex-1 rounded-lg border-2 border-primary-500 overflow-hidden relative"
+                  style={getPreviewBgStyle(song.presentation.background)}
                 >
-                  <span className="text-xs opacity-60 mr-2">{index + 1}</span>
-                  {section.label}
+                  {projectionState.mode === 'black' && (
+                    <div className="absolute inset-0 bg-black" />
+                  )}
+                  {projectionState.mode === 'live' && currentSection && (
+                    <div className="absolute inset-0 flex items-center justify-center p-2">
+                      <p
+                        className="text-center whitespace-pre-line"
+                        style={{
+                          fontFamily: song.presentation.textStyle.fontFamily,
+                          fontSize: '12px',
+                          fontWeight: song.presentation.textStyle.fontWeight,
+                          color: song.presentation.textStyle.color,
+                          textShadow: song.presentation.textStyle.shadow
+                            ? '1px 1px 2px rgba(0,0,0,0.8)'
+                            : 'none',
+                        }}
+                      >
+                        {currentSection.lyrics.split('\n').slice(0, 4).join('\n')}
+                      </p>
+                    </div>
+                  )}
+                  {projectionState.mode === 'clear' && <div className="absolute inset-0" />}
+                  {!currentSection && projectionState.mode === 'live' && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <p className="text-surface-500 text-xs">{t.present.clickToStart}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Next Slide */}
+              <div className="w-40 flex flex-col">
+                <h4 className="text-xs font-medium text-surface-400 mb-1 uppercase">
+                  {t.present.next}
+                </h4>
+                <div
+                  className="flex-1 rounded-lg border border-surface-600 overflow-hidden relative opacity-70"
+                  style={getPreviewBgStyle(song.presentation.background)}
+                >
+                  {nextSection && (
+                    <div className="absolute inset-0 flex items-center justify-center p-2">
+                      <p
+                        className="text-center whitespace-pre-line"
+                        style={{
+                          fontSize: '10px',
+                          color: song.presentation.textStyle.color,
+                          textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+                        }}
+                      >
+                        {nextSection.lyrics.split('\n').slice(0, 3).join('\n')}
+                      </p>
+                    </div>
+                  )}
+                  {!nextSection && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <p className="text-surface-500 text-xs">{t.present.end}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Control Buttons */}
+            <div className="flex items-center gap-2 justify-center">
+              <button onClick={prevSlide} className="btn btn-secondary text-sm px-6">
+                {t.present.prev}
+              </button>
+              <button onClick={nextSlide} className="btn btn-primary text-sm px-8">
+                {t.present.nextBtn}
+              </button>
+              <div className="w-px h-8 bg-surface-700 mx-2" />
+              <button
+                onClick={() => setProjectionMode('blank')}
+                className={`btn text-sm ${projectionState.mode === 'blank' ? 'btn-primary' : 'btn-secondary'}`}
+              >
+                {t.present.blank}
+              </button>
+              <button
+                onClick={() => setProjectionMode('black')}
+                className={`btn text-sm ${projectionState.mode === 'black' ? 'btn-primary' : 'btn-secondary'}`}
+              >
+                {t.present.black}
+              </button>
+              <button
+                onClick={() => setProjectionMode('logo')}
+                className={`btn text-sm ${projectionState.mode === 'logo' ? 'btn-primary' : 'btn-secondary'}`}
+              >
+                {t.present.logo}
+              </button>
+              <button
+                onClick={() => setProjectionMode('clear')}
+                className={`btn text-sm ${projectionState.mode === 'clear' ? 'btn-primary' : 'btn-secondary'}`}
+              >
+                {t.present.clear}
+              </button>
+            </div>
+
+            {/* Line Shift Buttons */}
+            <div className="flex items-center gap-2 justify-center flex-wrap">
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-surface-400 mr-1">{t.present.scrollSpeed}:</span>
+                <input
+                  type="number"
+                  min={0}
+                  step={0.1}
+                  value={scrollSpeed}
+                  onChange={(e) => setScrollSpeed(Math.max(0, parseFloat(e.target.value) || 0))}
+                  className="input w-16 text-xs py-1 px-2"
+                />
+                <span className="text-xs text-surface-400">s</span>
+              </div>
+              <div className="w-px h-6 bg-surface-700 mx-1" />
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-surface-400 mr-1">{t.present.shiftUp}:</span>
+                <button onClick={() => shiftLines(1, scrollSpeed)} className="btn btn-secondary text-xs px-2 py-1">
+                  ↑ 1
                 </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Preview Area */}
-        <div className="flex-1 p-4 flex flex-col">
-          {/* Current and Next Preview */}
-          <div className="flex-1 flex gap-4">
-            {/* Current Slide */}
-            <div className="flex-1 flex flex-col">
-              <h4 className="text-xs font-medium text-surface-400 mb-2 uppercase">{t.present.current}</h4>
-              <div
-                className="flex-1 rounded-lg border-2 border-primary-500 overflow-hidden relative"
-                style={getPreviewBgStyle(song.presentation.background)}
-              >
-                {projectionState.mode === 'black' && (
-                  <div className="absolute inset-0 bg-black" />
-                )}
-                {projectionState.mode === 'live' && currentSection && (
-                  <div className="absolute inset-0 flex items-center justify-center p-6">
-                    <p
-                      className="text-center whitespace-pre-line"
-                      style={{
-                        fontFamily: song.presentation.textStyle.fontFamily,
-                        fontSize: '18px',
-                        fontWeight: song.presentation.textStyle.fontWeight,
-                        color: song.presentation.textStyle.color,
-                        textShadow: song.presentation.textStyle.shadow
-                          ? '2px 2px 4px rgba(0,0,0,0.8)'
-                          : 'none',
-                      }}
-                    >
-                      {currentSection.lyrics}
-                    </p>
-                  </div>
-                )}
-                {projectionState.mode === 'clear' && (
-                  <div className="absolute inset-0" />
-                )}
-                {!currentSection && projectionState.mode === 'live' && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <p className="text-surface-500 text-sm">{t.present.clickToStart}</p>
-                  </div>
-                )}
+                <button onClick={() => shiftLines(2, scrollSpeed)} className="btn btn-secondary text-xs px-2 py-1">
+                  ↑ 2
+                </button>
+                <button onClick={() => shiftLines(3, scrollSpeed)} className="btn btn-secondary text-xs px-2 py-1">
+                  ↑ 3
+                </button>
+                <button onClick={() => shiftLines(4, scrollSpeed)} className="btn btn-secondary text-xs px-2 py-1">
+                  ↑ 4
+                </button>
+              </div>
+              <div className="w-px h-6 bg-surface-700 mx-1" />
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-surface-400 mr-1">{t.present.shiftDown}:</span>
+                <button onClick={() => shiftLines(-1, scrollSpeed)} className="btn btn-secondary text-xs px-2 py-1">
+                  ↓ 1
+                </button>
+                <button onClick={() => shiftLines(-2, scrollSpeed)} className="btn btn-secondary text-xs px-2 py-1">
+                  ↓ 2
+                </button>
+                <button onClick={() => shiftLines(-3, scrollSpeed)} className="btn btn-secondary text-xs px-2 py-1">
+                  ↓ 3
+                </button>
+                <button onClick={() => shiftLines(-4, scrollSpeed)} className="btn btn-secondary text-xs px-2 py-1">
+                  ↓ 4
+                </button>
               </div>
             </div>
 
-            {/* Next Slide */}
-            <div className="w-48 flex flex-col">
-              <h4 className="text-xs font-medium text-surface-400 mb-2 uppercase">{t.present.next}</h4>
-              <div
-                className="flex-1 rounded-lg border border-surface-600 overflow-hidden relative opacity-70"
-                style={getPreviewBgStyle(song.presentation.background)}
-              >
-                {nextSection && (
-                  <div className="absolute inset-0 flex items-center justify-center p-3">
-                    <p
-                      className="text-center whitespace-pre-line text-xs"
-                      style={{
-                        color: song.presentation.textStyle.color,
-                        textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
-                      }}
-                    >
-                      {nextSection.lyrics.split('\n').slice(0, 3).join('\n')}
-                    </p>
-                  </div>
-                )}
-                {!nextSection && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <p className="text-surface-500 text-xs">{t.present.end}</p>
-                  </div>
-                )}
-              </div>
+            {/* Keyboard shortcut hints */}
+            <div className="text-center">
+              <p className="text-xs text-surface-500">{t.present.shortcuts}</p>
             </div>
-          </div>
-
-          {/* Control Buttons */}
-          <div className="mt-4 flex items-center gap-2 justify-center">
-            <button onClick={prevSlide} className="btn btn-secondary text-sm px-6">
-              {t.present.prev}
-            </button>
-            <button onClick={nextSlide} className="btn btn-primary text-sm px-8">
-              {t.present.nextBtn}
-            </button>
-            <div className="w-px h-8 bg-surface-700 mx-2" />
-            <button
-              onClick={() => setProjectionMode('blank')}
-              className={`btn text-sm ${projectionState.mode === 'blank' ? 'btn-primary' : 'btn-secondary'}`}
-            >
-              {t.present.blank}
-            </button>
-            <button
-              onClick={() => setProjectionMode('black')}
-              className={`btn text-sm ${projectionState.mode === 'black' ? 'btn-primary' : 'btn-secondary'}`}
-            >
-              {t.present.black}
-            </button>
-            <button
-              onClick={() => setProjectionMode('logo')}
-              className={`btn text-sm ${projectionState.mode === 'logo' ? 'btn-primary' : 'btn-secondary'}`}
-            >
-              {t.present.logo}
-            </button>
-            <button
-              onClick={() => setProjectionMode('clear')}
-              className={`btn text-sm ${projectionState.mode === 'clear' ? 'btn-primary' : 'btn-secondary'}`}
-            >
-              {t.present.clear}
-            </button>
-          </div>
-
-          {/* Line Shift Buttons */}
-          <div className="mt-3 flex items-center gap-2 justify-center">
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-surface-400 mr-1">{t.present.shiftUp}:</span>
-              <button onClick={() => shiftLines(1)} className="btn btn-secondary text-xs px-2 py-1">
-                ↑ 1
-              </button>
-              <button onClick={() => shiftLines(2)} className="btn btn-secondary text-xs px-2 py-1">
-                ↑ 2
-              </button>
-              <button onClick={() => shiftLines(3)} className="btn btn-secondary text-xs px-2 py-1">
-                ↑ 3
-              </button>
-              <button onClick={() => shiftLines(4)} className="btn btn-secondary text-xs px-2 py-1">
-                ↑ 4
-              </button>
-            </div>
-            <div className="w-px h-6 bg-surface-700 mx-1" />
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-surface-400 mr-1">{t.present.shiftDown}:</span>
-              <button onClick={() => shiftLines(-1)} className="btn btn-secondary text-xs px-2 py-1">
-                ↓ 1
-              </button>
-              <button onClick={() => shiftLines(-2)} className="btn btn-secondary text-xs px-2 py-1">
-                ↓ 2
-              </button>
-              <button onClick={() => shiftLines(-3)} className="btn btn-secondary text-xs px-2 py-1">
-                ↓ 3
-              </button>
-              <button onClick={() => shiftLines(-4)} className="btn btn-secondary text-xs px-2 py-1">
-                ↓ 4
-              </button>
-            </div>
-          </div>
-
-          {/* Keyboard shortcut hints */}
-          <div className="mt-3 text-center">
-            <p className="text-xs text-surface-500">
-              {t.present.shortcuts}
-            </p>
           </div>
         </div>
 

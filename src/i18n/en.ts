@@ -95,6 +95,7 @@ export const en = {
     shortcuts: 'Space/→ Next  |  ← Prev  |  B Black  |  C Clear  |  P Projection  |  Esc Reset',
     shiftUp: 'Shift Up',
     shiftDown: 'Shift Down',
+    scrollSpeed: 'Speed',
   },
 
   // Settings

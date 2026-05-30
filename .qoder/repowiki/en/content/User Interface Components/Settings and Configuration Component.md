@@ -8,10 +8,21 @@
 - [BackgroundGallery.tsx](file://src/components/BackgroundGallery.tsx)
 - [index.ts](file://src/types/index.ts)
 - [en.ts](file://src/i18n/en.ts)
+- [zhTW.ts](file://src/i18n/zhTW.ts)
 - [index.ts](file://src/i18n/index.ts)
 - [main.ts](file://electron/main.ts)
 - [db.ts](file://electron/db.ts)
+- [index.css](file://src/index.css)
+- [main.tsx](file://src/main.tsx)
+- [App.tsx](file://src/App.tsx)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Updated Typography section to document the addition of Chinese font support (華康超圓體)
+- Enhanced Font Family Options section with comprehensive coverage of Asian language typography
+- Added Internationalization considerations for multilingual font support
+- Updated accessibility guidance for Asian character rendering
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -25,7 +36,9 @@
 9. [Conclusion](#conclusion)
 
 ## Introduction
-This document provides comprehensive technical documentation for the SettingsPanel component, which enables users to configure background customization and text styling for presentations. It covers the background settings system (color pickers, gradient configurations, image upload and management, and video background support), the text styling system (fonts, colors, alignment, shadows, outlines, and responsive typography), integration with the global state store for persistent settings, validation of configuration values, and real-time preview updates. It also explains the component’s impact on projection rendering and its role in creating optimal viewing experiences.
+This document provides comprehensive technical documentation for the SettingsPanel component, which enables users to configure background customization and text styling for presentations. It covers the background settings system (color pickers, gradient configurations, image upload and management, and video background support), the text styling system (fonts, colors, alignment, shadows, outlines, and responsive typography), integration with the global state store for persistent settings, validation of configuration values, and real-time preview updates. It also explains the component's impact on projection rendering and its role in creating optimal viewing experiences.
+
+**Updated** Added comprehensive Chinese font support (華康超圓體) to expand typography options for Asian language users while maintaining backward compatibility with existing Western font families.
 
 ## Project Structure
 The SettingsPanel component resides in the components directory and integrates with the global Zustand store, type definitions, internationalization, and Electron backend for background image management and projection updates.
@@ -37,11 +50,15 @@ SP --> BG["BackgroundGallery.tsx"]
 SP --> T["types/index.ts"]
 SP --> I18N["i18n/index.ts"]
 SP --> I18N_EN["i18n/en.ts"]
+SP --> I18N_ZH["i18n/zhTW.ts"]
 PV["ProjectionView.tsx"] --> AS
 PV --> T
 E_MAIN["electron/main.ts"] --> E_DB["electron/db.ts"]
 BG --> E_MAIN
 SP --> E_MAIN
+ICSS["index.css"] --> SP
+APP["App.tsx"] --> SP
+MAIN_APP["main.tsx"] --> APP
 ```
 
 **Diagram sources**
@@ -51,9 +68,13 @@ SP --> E_MAIN
 - [BackgroundGallery.tsx:1-98](file://src/components/BackgroundGallery.tsx#L1-L98)
 - [index.ts:1-89](file://src/types/index.ts#L1-L89)
 - [en.ts:1-180](file://src/i18n/en.ts#L1-L180)
+- [zhTW.ts:1-180](file://src/i18n/zhTW.ts#L1-L180)
 - [index.ts:1-43](file://src/i18n/index.ts#L1-L43)
 - [main.ts:1-390](file://electron/main.ts#L1-L390)
 - [db.ts:1-214](file://electron/db.ts#L1-L214)
+- [index.css:1-100](file://src/index.css#L1-L100)
+- [main.tsx:1-11](file://src/main.tsx#L1-L11)
+- [App.tsx:1-102](file://src/App.tsx#L1-L102)
 
 **Section sources**
 - [SettingsPanel.tsx:1-523](file://src/components/SettingsPanel.tsx#L1-L523)
@@ -61,10 +82,14 @@ SP --> E_MAIN
 - [ProjectionView.tsx:1-134](file://src/components/ProjectionView.tsx#L1-L134)
 - [BackgroundGallery.tsx:1-98](file://src/components/BackgroundGallery.tsx#L1-L98)
 - [index.ts:1-89](file://src/types/index.ts#L1-L89)
-- [en.ts:1-180](file://src/i18n/en.ts#L1-L180)
+- [en.ts:100-179](file://src/i18n/en.ts#L100-L179)
+- [zhTW.ts:102-141](file://src/i18n/zhTW.ts#L102-L141)
 - [index.ts:1-43](file://src/i18n/index.ts#L1-L43)
 - [main.ts:1-390](file://electron/main.ts#L1-L390)
 - [db.ts:1-214](file://electron/db.ts#L1-L214)
+- [index.css:1-100](file://src/index.css#L1-L100)
+- [main.tsx:1-11](file://src/main.tsx#L1-L11)
+- [App.tsx:1-102](file://src/App.tsx#L1-L102)
 
 ## Core Components
 - SettingsPanel: Central configuration UI for background and text styling, with real-time preview and persistence.
@@ -72,7 +97,9 @@ SP --> E_MAIN
 - ProjectionView: Real-time projection renderer that consumes the global projection state.
 - Global Store (Zustand): Provides reactive state for songs, projection, and settings with persistence hooks.
 - Types: Defines BackgroundSettings, TextStyle, PresentationSettings, Song, and ProjectionState structures.
-- Internationalization: Provides localized strings for UI labels and messages.
+- Internationalization: Provides localized strings for UI labels and messages in English and Traditional Chinese.
+
+**Updated** Enhanced internationalization support with Traditional Chinese localization for font-related settings.
 
 **Section sources**
 - [SettingsPanel.tsx:1-523](file://src/components/SettingsPanel.tsx#L1-L523)
@@ -81,6 +108,7 @@ SP --> E_MAIN
 - [appStore.ts:1-385](file://src/store/appStore.ts#L1-L385)
 - [index.ts:1-89](file://src/types/index.ts#L1-L89)
 - [en.ts:100-179](file://src/i18n/en.ts#L100-L179)
+- [zhTW.ts:102-141](file://src/i18n/zhTW.ts#L102-L141)
 - [index.ts:1-43](file://src/i18n/index.ts#L1-L43)
 
 ## Architecture Overview
@@ -149,7 +177,7 @@ Preview --> Persist["Persist to store"]
 ### Text Styling System
 The text styling system provides comprehensive controls for fonts, colors, alignment, positioning, spacing, and visual effects.
 
-- Font family: Dropdown with common web-safe fonts.
+- Font family: Dropdown with common web-safe fonts including expanded Asian language support.
 - Font size: Numeric input with min/max constraints.
 - Font weight: Normal, bold, lighter options.
 - Text color: Color picker with hex input.
@@ -158,6 +186,8 @@ The text styling system provides comprehensive controls for fonts, colors, align
 - Line height: Numeric input with step increments.
 - Margins: Top and bottom margins with step increments.
 - Effects: Text shadow, outline, italic toggles.
+
+**Updated** Enhanced font family options now include Traditional Chinese font (華康超圓體) alongside existing Western fonts for comprehensive Asian language typography support.
 
 ```mermaid
 classDiagram
@@ -175,14 +205,39 @@ class TextStyle {
 +number topMargin
 +number bottomMargin
 }
+class FontOptions {
++string[] westernFonts
++string traditionalChineseFont
++string[] asianFontSupport
+}
 ```
 
 **Diagram sources**
 - [index.ts:29-42](file://src/types/index.ts#L29-L42)
+- [SettingsPanel.tsx:251-263](file://src/components/SettingsPanel.tsx#L251-L263)
 
 **Section sources**
 - [SettingsPanel.tsx:244-396](file://src/components/SettingsPanel.tsx#L244-L396)
 - [index.ts:29-42](file://src/types/index.ts#L29-L42)
+- [SettingsPanel.tsx:251-263](file://src/components/SettingsPanel.tsx#L251-L263)
+
+### Font Family Options
+The font family dropdown now provides comprehensive typography options supporting both Western and Asian languages:
+
+**Western Fonts:**
+- Arial, Helvetica, Georgia, Times New Roman, Verdana, Trebuchet MS, Impact, Comic Sans MS
+
+**Asian Language Support:**
+- 華康超圓體 (Traditional Chinese font)
+
+**Internationalization Considerations:**
+- Font names are displayed in their respective languages
+- Traditional Chinese font support enables proper rendering of Asian characters
+- Maintains backward compatibility with existing Western font families
+
+**Section sources**
+- [SettingsPanel.tsx:251-263](file://src/components/SettingsPanel.tsx#L251-L263)
+- [zhTW.ts:116](file://src/i18n/zhTW.ts#L116)
 
 ### Background Image Management
 Background images are uploaded from disk or added to the gallery, persisted in an embedded SQLite database, and served via a custom protocol.
@@ -239,7 +294,7 @@ note for BackgroundSettings "Type includes 'video' as a potential mode"
 ### Integration with Global State Store
 SettingsPanel updates the global store using updateSong and setProjectionState, enabling immediate persistence and projection synchronization.
 
-- updateSong: Updates a specific song’s presentation settings.
+- updateSong: Updates a specific song's presentation settings.
 - setProjectionState: Sends the latest projection state to the projection window.
 - Persistence: saveToDisk and loadFromDisk handle data serialization to disk.
 
@@ -298,7 +353,7 @@ To ensure text visibility across backgrounds:
 - Adjust text shadow and outline for improved legibility.
 - Maintain sufficient line height and margins for readability.
 
-These controls are exposed directly in the SettingsPanel under the Text Style section.
+**Enhanced** With Traditional Chinese font support, ensure proper character rendering and spacing for Asian language content. Test font fallback mechanisms and consider font loading performance for international users.
 
 **Section sources**
 - [SettingsPanel.tsx:228-241](file://src/components/SettingsPanel.tsx#L228-L241)
@@ -308,8 +363,9 @@ These controls are exposed directly in the SettingsPanel under the Text Style se
 - Minimalist: Centered, bold, large font with subtle shadow on a neutral gradient.
 - Dramatic: Bold, outlined text with strong contrast against a dark overlay on a full-bleed image.
 - Readable: Increased line height and top/bottom margins with centered alignment on a soft gradient.
+- Asian Language Optimized: Traditional Chinese font with appropriate line height and margins for better readability of Asian characters.
 
-These combinations leverage the provided controls for fonts, alignment, shadows, outlines, and margins.
+These combinations leverage the provided controls for fonts, alignment, shadows, outlines, and margins, with enhanced support for Asian typography.
 
 **Section sources**
 - [SettingsPanel.tsx:244-396](file://src/components/SettingsPanel.tsx#L244-L396)
@@ -320,6 +376,7 @@ The SettingsPanel depends on:
 - BackgroundGallery for image selection and management.
 - Types for strict typing of background and text settings.
 - Electron main process for image handling and projection updates.
+- Internationalization system for multilingual UI support.
 
 ```mermaid
 graph LR
@@ -328,9 +385,13 @@ SP --> BG["BackgroundGallery.tsx"]
 SP --> T["types/index.ts"]
 SP --> I18N["i18n/index.ts"]
 SP --> I18N_EN["i18n/en.ts"]
+SP --> I18N_ZH["i18n/zhTW.ts"]
 SP --> EM["electron/main.ts"]
 EM --> DB["electron/db.ts"]
 PV["ProjectionView.tsx"] --> AS
+ICSS["index.css"] --> SP
+APP["App.tsx"] --> SP
+MAIN_APP["main.tsx"] --> APP
 ```
 
 **Diagram sources**
@@ -339,9 +400,13 @@ PV["ProjectionView.tsx"] --> AS
 - [BackgroundGallery.tsx:1-2](file://src/components/BackgroundGallery.tsx#L1-L2)
 - [index.ts:1-3](file://src/types/index.ts#L1-L3)
 - [en.ts:1-3](file://src/i18n/en.ts#L1-L3)
+- [zhTW.ts:1-3](file://src/i18n/zhTW.ts#L1-L3)
 - [index.ts:1-3](file://src/i18n/index.ts#L1-L3)
 - [main.ts:1-5](file://electron/main.ts#L1-L5)
 - [db.ts:1-5](file://electron/db.ts#L1-L5)
+- [index.css:1-3](file://src/index.css#L1-L3)
+- [main.tsx:1-3](file://src/main.tsx#L1-L3)
+- [App.tsx:1-3](file://src/App.tsx#L1-L3)
 
 **Section sources**
 - [SettingsPanel.tsx:1-6](file://src/components/SettingsPanel.tsx#L1-L6)
@@ -349,17 +414,21 @@ PV["ProjectionView.tsx"] --> AS
 - [BackgroundGallery.tsx:1-2](file://src/components/BackgroundGallery.tsx#L1-L2)
 - [index.ts:1-3](file://src/types/index.ts#L1-L3)
 - [en.ts:1-3](file://src/i18n/en.ts#L1-L3)
+- [zhTW.ts:1-3](file://src/i18n/zhTW.ts#L1-L3)
 - [index.ts:1-3](file://src/i18n/index.ts#L1-L3)
 - [main.ts:1-5](file://electron/main.ts#L1-L5)
 - [db.ts:1-5](file://electron/db.ts#L1-L5)
+- [index.css:1-3](file://src/index.css#L1-L3)
+- [main.tsx:1-3](file://src/main.tsx#L1-L3)
+- [App.tsx:1-3](file://src/App.tsx#L1-L3)
 
 ## Performance Considerations
 - Background images: Serve via the custom protocol to avoid large base64 payloads in memory. Use thumbnails and lazy loading in the gallery.
 - Projection rendering: Avoid unnecessary re-renders by batching updates and using minimal DOM changes.
 - Text effects: Text shadows and outlines can be expensive; use judiciously and disable for low-power devices.
 - Persistence: Debounce save operations to disk to reduce I/O overhead.
-
-[No sources needed since this section provides general guidance]
+- Font loading: Consider font preloading strategies for Asian language fonts to minimize rendering delays.
+- Internationalization: Cache frequently used translations to improve UI responsiveness across different locales.
 
 ## Troubleshooting Guide
 - Background image not appearing:
@@ -371,6 +440,10 @@ PV["ProjectionView.tsx"] --> AS
   - Increase overlay opacity or adjust text color/outline/shadow.
 - Projection not updating:
   - Confirm the projection window is open and receiving state updates.
+- Font rendering issues:
+  - Verify the selected font is available on the system.
+  - Check font fallback mechanisms for Asian language characters.
+  - Ensure proper font loading for Traditional Chinese fonts.
 
 **Section sources**
 - [main.ts:362-374](file://electron/main.ts#L362-L374)
@@ -378,4 +451,8 @@ PV["ProjectionView.tsx"] --> AS
 - [ProjectionView.tsx:22-29](file://src/components/ProjectionView.tsx#L22-L29)
 
 ## Conclusion
-The SettingsPanel component provides a robust, real-time configuration experience for background customization and text styling. Through tight integration with the global store, Electron-backed image management, and a projection renderer, it ensures consistent, accessible, and visually appealing presentations. Future enhancements could include video background support and advanced typography controls to further optimize the viewing experience.
+The SettingsPanel component provides a robust, real-time configuration experience for background customization and text styling. Through tight integration with the global store, Electron-backed image management, and a projection renderer, it ensures consistent, accessible, and visually appealing presentations. 
+
+**Enhanced** Recent updates have expanded typography capabilities with comprehensive Chinese font support (華康超圓體), enabling better presentation experiences for Asian language users while maintaining full backward compatibility with existing Western font families. The component continues to evolve with improved internationalization support, performance optimizations, and enhanced accessibility features for diverse user bases.
+
+Future enhancements could include video background support, advanced typography controls, and optimized font loading strategies to further enhance the viewing experience across different languages and platforms.

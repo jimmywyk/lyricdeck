@@ -8,9 +8,17 @@
 - [main.ts](file://electron/main.ts)
 - [preload.ts](file://electron/preload.ts)
 - [PresentPanel.tsx](file://src/components/PresentPanel.tsx)
+- [PreparationList.tsx](file://src/components/PreparationList.tsx)
 - [App.tsx](file://src/App.tsx)
 - [index.css](file://src/index.css)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Enhanced projection control actions documentation to include blank mode functionality
+- Updated preparation list interaction workflow to show cleaner transition experience
+- Added documentation for the new selectFromPreparationList feature that displays only song background without immediately showing lyrics
+- Updated projection modes documentation to reflect the expanded functionality
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -25,7 +33,7 @@
 10. [Appendices](#appendices)
 
 ## Introduction
-This document provides comprehensive documentation for the ProjectionView component, which renders fullscreen projection output for live presentations. It covers the component's fullscreen rendering capabilities, real-time state synchronization from the main application, multi-display support, projection mode system, background rendering pipeline, text styling application, responsive scaling, Electron window management integration, display detection APIs, and projection state updates. It also includes practical examples of projection setup workflows, troubleshooting display issues, and performance optimization recommendations for smooth rendering in live presentation environments.
+This document provides comprehensive documentation for the ProjectionView component, which renders fullscreen projection output for live presentations. It covers the component's fullscreen rendering capabilities, real-time state synchronization from the main application, multi-display support, projection mode system, background rendering pipeline, text styling application, responsive scaling, Electron window management integration, display detection APIs, and projection state updates. The component now includes enhanced projection control actions with blank mode functionality that provides cleaner transition experiences during preparation phases, allowing presenters to display only song backgrounds without immediately revealing lyrics.
 
 ## Project Structure
 The ProjectionView component is part of a React-based desktop application built with Electron. The application architecture separates concerns across:
@@ -45,6 +53,7 @@ subgraph "React Renderer"
 APP["src/App.tsx"]
 PV["src/components/ProjectionView.tsx"]
 PP["src/components/PresentPanel.tsx"]
+PL["src/components/PreparationList.tsx"]
 AS["src/store/appStore.ts"]
 TY["src/types/index.ts"]
 end
@@ -55,12 +64,16 @@ EM --> EP
 EP --> APP
 APP --> PV
 APP --> PP
+APP --> PL
 AS --> PV
 AS --> PP
+AS --> PL
 TY --> PV
 TY --> PP
+TY --> PL
 CSS --> PV
 CSS --> PP
+CSS --> PL
 ```
 
 **Diagram sources**
@@ -68,8 +81,9 @@ CSS --> PP
 - [preload.ts:1-43](file://electron/preload.ts#L1-L43)
 - [App.tsx:1-102](file://src/App.tsx#L1-L102)
 - [ProjectionView.tsx:1-134](file://src/components/ProjectionView.tsx#L1-L134)
-- [PresentPanel.tsx:1-365](file://src/components/PresentPanel.tsx#L1-L365)
-- [appStore.ts:1-385](file://src/store/appStore.ts#L1-L385)
+- [PresentPanel.tsx:1-379](file://src/components/PresentPanel.tsx#L1-L379)
+- [PreparationList.tsx:1-188](file://src/components/PreparationList.tsx#L1-L188)
+- [appStore.ts:1-393](file://src/store/appStore.ts#L1-L393)
 - [index.ts:1-89](file://src/types/index.ts#L1-L89)
 - [index.css:1-100](file://src/index.css#L1-L100)
 
@@ -78,8 +92,9 @@ CSS --> PP
 - [preload.ts:1-43](file://electron/preload.ts#L1-L43)
 - [App.tsx:1-102](file://src/App.tsx#L1-L102)
 - [ProjectionView.tsx:1-134](file://src/components/ProjectionView.tsx#L1-L134)
-- [PresentPanel.tsx:1-365](file://src/components/PresentPanel.tsx#L1-L365)
-- [appStore.ts:1-385](file://src/store/appStore.ts#L1-L385)
+- [PresentPanel.tsx:1-379](file://src/components/PresentPanel.tsx#L1-L379)
+- [PreparationList.tsx:1-188](file://src/components/PreparationList.tsx#L1-L188)
+- [appStore.ts:1-393](file://src/store/appStore.ts#L1-L393)
 - [index.ts:1-89](file://src/types/index.ts#L1-L89)
 - [index.css:1-100](file://src/index.css#L1-L100)
 
@@ -97,40 +112,48 @@ Key integration points:
 - Electron preload bridge exposes updateProjection and onProjectionState callbacks
 - Zustand store manages projection state and dispatches updates to the projection window
 - Electron main process creates and manages the projection window on target displays
+- Enhanced preparation list functionality allows cleaner transition experiences through blank mode
+
+**Updated** Added blank mode functionality for cleaner transition experiences during preparation phases
 
 **Section sources**
 - [ProjectionView.tsx:1-134](file://src/components/ProjectionView.tsx#L1-L134)
-- [appStore.ts:241-302](file://src/store/appStore.ts#L241-L302)
+- [appStore.ts:350-367](file://src/store/appStore.ts#L350-L367)
 - [main.ts:111-152](file://electron/main.ts#L111-L152)
 - [preload.ts:3-21](file://electron/preload.ts#L3-L21)
 
 ## Architecture Overview
-The projection system follows a unidirectional data flow:
+The projection system follows a unidirectional data flow with enhanced preparation list integration:
 1. Presentation controls in PresentPanel trigger state changes
-2. Zustand store updates projectionState and sends IPC updates
-3. Electron main process forwards state to projection window
-4. ProjectionView subscribes to state updates and re-renders
+2. Preparation list interactions utilize blank mode for cleaner transitions
+3. Zustand store updates projectionState and sends IPC updates
+4. Electron main process forwards state to projection window
+5. ProjectionView subscribes to state updates and re-renders
 
 ```mermaid
 sequenceDiagram
 participant Presenter as "Presenter"
 participant PresentPanel as "PresentPanel"
+participant PreparationList as "PreparationList"
 participant Store as "Zustand Store"
 participant Main as "Electron Main"
 participant Preload as "Preload Bridge"
 participant Projection as "ProjectionView"
 Presenter->>PresentPanel : "Toggle projection / change mode"
 PresentPanel->>Store : "setProjectionState()"
+PreparationList->>Store : "selectFromPreparationList()"
 Store->>Main : "updateProjection(state)"
 Main->>Preload : "send('update-projection', state)"
 Preload->>Projection : "onProjectionState(callback)"
 Projection->>Projection : "setState(newState)"
 Projection->>Projection : "Re-render with new styles"
+Note over PreparationList,Store : "Blank mode for cleaner transitions"
 ```
 
 **Diagram sources**
-- [PresentPanel.tsx:109-129](file://src/components/PresentPanel.tsx#L109-L129)
-- [appStore.ts:242-249](file://src/store/appStore.ts#L242-L249)
+- [PresentPanel.tsx:288-311](file://src/components/PresentPanel.tsx#L288-L311)
+- [PreparationList.tsx:57-63](file://src/components/PreparationList.tsx#L57-L63)
+- [appStore.ts:350-367](file://src/store/appStore.ts#L350-L367)
 - [main.ts:186-190](file://electron/main.ts#L186-L190)
 - [preload.ts:10-16](file://electron/preload.ts#L10-L16)
 - [ProjectionView.tsx:22-29](file://src/components/ProjectionView.tsx#L22-L29)
@@ -200,8 +223,10 @@ The component supports five projection modes:
 - Black: Solid black background
 - Logo: Dark background with centered "LyricDeck" watermark
 - Live: Full projection with lyrics and background
-- Blank: Transparent overlay with text styling
+- Blank: Transparent overlay with text styling (enhanced with cleaner transitions)
 - Clear: Empty projection (used for transitions)
+
+**Updated** Blank mode now provides cleaner transition experience by displaying only song background without immediately showing lyrics during preparation phase
 
 ```mermaid
 flowchart TD
@@ -209,13 +234,14 @@ Start(["ProjectionView Render"]) --> CheckMode{"Mode"}
 CheckMode --> |black| Black["Solid black background"]
 CheckMode --> |logo| Logo["Black background with watermark"]
 CheckMode --> |live| Live["Live projection with lyrics"]
-CheckMode --> |blank| Blank["Blank overlay with text styling"]
+CheckMode --> |blank| Blank["Blank overlay with text styling<br/>Enhanced: Cleaner transition experience"]
 CheckMode --> |clear| Clear["Empty projection"]
 Live --> Background["Apply background settings"]
 Live --> Text["Apply text styling and line offset"]
 Live --> Copyright["Show copyright if present"]
 Background --> Overlay["Optional overlay color"]
 Text --> Transition["Smooth line offset transition"]
+Blank --> Preparation["Preparation phase transitions<br/>Shows background only"]
 ```
 
 **Diagram sources**
@@ -274,6 +300,36 @@ Effects --> Outline["WebkitTextStroke"]
 **Section sources**
 - [ProjectionView.tsx:1-134](file://src/components/ProjectionView.tsx#L1-L134)
 - [index.ts:69-81](file://src/types/index.ts#L69-L81)
+
+### Enhanced Preparation List Integration
+The preparation list system now includes enhanced projection control actions that provide cleaner transition experiences:
+
+#### Blank Mode Functionality
+The `selectFromPreparationList` action has been enhanced to automatically switch to blank mode when selecting songs from the preparation list. This provides a cleaner transition experience by displaying only the song's background without immediately showing lyrics during the preparation phase.
+
+**Updated** Enhanced projection control actions with blank mode functionality for smoother transitions
+
+```mermaid
+flowchart TD
+PrepList["PreparationList.tsx"] --> SelectSong["selectFromPreparationList()"]
+SelectSong --> SetBlank["Set mode: 'blank'"]
+SelectSong --> ClearLyrics["Set lyrics: undefined"]
+SelectSong --> ShowBackground["Display song background only"]
+SelectSong --> UpdateState["Update projection state"]
+UpdateState --> ProjectionView["ProjectionView renders blank mode"]
+```
+
+**Diagram sources**
+- [PreparationList.tsx:57-63](file://src/components/PreparationList.tsx#L57-L63)
+- [appStore.ts:350-367](file://src/store/appStore.ts#L350-L367)
+
+#### Presentation Controls Integration
+The presentation panel provides direct access to blank mode through dedicated buttons and keyboard shortcuts, complementing the preparation list functionality.
+
+**Section sources**
+- [PreparationList.tsx:1-188](file://src/components/PreparationList.tsx#L1-L188)
+- [PresentPanel.tsx:288-311](file://src/components/PresentPanel.tsx#L288-L311)
+- [appStore.ts:350-367](file://src/store/appStore.ts#L350-L367)
 
 ### Electron Integration
 The projection system integrates tightly with Electron for window management and display detection:
@@ -350,6 +406,8 @@ Types --> PV
 Store --> PV
 Electron --> PV
 Preload --> PV
+PL["PreparationList.tsx"] --> Store
+PP["PresentPanel.tsx"] --> Store
 subgraph "External Dependencies"
 React["React"]
 Tailwind["Tailwind CSS"]
@@ -360,6 +418,8 @@ PV --> React
 PV --> Tailwind
 Store --> Zustand
 PV --> ElectronDep
+PL --> React
+PP --> React
 ```
 
 **Diagram sources**
@@ -369,12 +429,15 @@ PV --> ElectronDep
 - [main.ts:1-5](file://electron/main.ts#L1-L5)
 - [preload.ts:1-3](file://electron/preload.ts#L1-L3)
 - [index.css:1-3](file://src/index.css#L1-L3)
+- [PreparationList.tsx:1-3](file://src/components/PreparationList.tsx#L1-L3)
+- [PresentPanel.tsx:1-4](file://src/components/PresentPanel.tsx#L1-L4)
 
 Key dependency characteristics:
 - Low coupling with external libraries (React, Tailwind, Zustand)
 - Strong separation between presentation logic and Electron integration
 - Type-safe state management through TypeScript interfaces
 - Minimal runtime dependencies for optimal performance
+- Enhanced preparation list integration for improved workflow
 
 **Section sources**
 - [ProjectionView.tsx:1-3](file://src/components/ProjectionView.tsx#L1-L3)
@@ -391,21 +454,25 @@ Optimizing the ProjectionView component for smooth live presentation rendering:
 - Minimize DOM reflows by batching style updates
 - Leverage Tailwind utility classes for efficient styling
 - Avoid unnecessary re-renders through proper state management
+- Optimize blank mode rendering for cleaner transitions
 
 ### Memory Management
 - Clean up IPC event listeners on component unmount
 - Dispose of projection window resources properly
 - Monitor memory usage during long presentations
+- Efficient handling of preparation list state changes
 
 ### Display Performance
 - Use hardware-accelerated CSS properties (transform, filter)
 - Optimize image backgrounds with appropriate sizing
 - Consider GPU acceleration for complex effects
+- Smooth transitions between blank and live modes
 
 ### State Synchronization
 - Debounce rapid state updates to prevent excessive re-renders
 - Use selective state updates for projection-specific properties
 - Cache computed style values when possible
+- Optimize preparation list interaction performance
 
 ## Troubleshooting Guide
 
@@ -436,28 +503,44 @@ Optimizing the ProjectionView component for smooth live presentation rendering:
 - Validate state update frequency
 - Monitor for memory leaks
 
+### Preparation List Integration Issues
+**Issue**: Blank mode not activating from preparation list
+- Verify selectFromPreparationList action implementation
+- Check projection state updates for blank mode
+- Ensure proper cleanup of lyrics and line offset
+
+**Issue**: Inconsistent transition behavior
+- Monitor preparation list click events
+- Verify blank mode state persistence
+- Check for conflicts with manual mode switching
+
 ### Performance Issues
 **Symptoms**: Choppy animations or delayed updates
 - Reduce animation complexity
 - Optimize background rendering
 - Monitor CPU/GPU usage during presentations
+- Optimize preparation list interaction performance
 
 **Section sources**
 - [main.ts:111-152](file://electron/main.ts#L111-L152)
 - [preload.ts:10-16](file://electron/preload.ts#L10-L16)
 - [ProjectionView.tsx:22-29](file://src/components/ProjectionView.tsx#L22-L29)
+- [appStore.ts:350-367](file://src/store/appStore.ts#L350-L367)
 
 ## Conclusion
 The ProjectionView component provides a robust, performant solution for fullscreen lyric projection in live presentation environments. Its architecture emphasizes real-time state synchronization, multi-display support, and responsive rendering while maintaining clean separation between presentation logic and Electron integration. The component's design enables smooth operation during live events through careful optimization of rendering pipelines, efficient state management, and reliable IPC communication.
 
+**Updated** The enhanced projection control actions with blank mode functionality significantly improve the preparation workflow by providing cleaner transition experiences. Presenters can now smoothly transition between songs using blank mode, displaying only the background while preparing for the next presentation, resulting in professional-quality transitions without immediate lyric reveals.
+
 Key strengths include:
 - Seamless integration with the presentation controls system
-- Comprehensive multi-mode rendering support
+- Comprehensive multi-mode rendering support including enhanced blank mode
 - Efficient background and text styling systems
 - Reliable multi-display window management
 - Performance-optimized rendering pipeline
+- Enhanced preparation list integration for improved workflow
 
-The component serves as a critical foundation for live presentation workflows, enabling presenters to deliver professional-quality lyric projections with minimal technical overhead.
+The component serves as a critical foundation for live presentation workflows, enabling presenters to deliver professional-quality lyric projections with minimal technical overhead while enjoying improved preparation experiences through the blank mode functionality.
 
 ## Appendices
 
@@ -468,6 +551,13 @@ The component serves as a critical foundation for live presentation workflows, e
 2. Click "Start Projection" button
 3. Verify projection window opens on selected display
 4. Adjust projection mode as needed
+
+#### Enhanced Preparation Workflow with Blank Mode
+1. Build preparation list with desired songs
+2. Select song from preparation list
+3. System automatically switches to blank mode with background only
+4. Prepare for presentation without immediate lyric reveal
+5. Switch to live mode when ready to present
 
 #### Multi-Display Configuration
 1. Enumerate available displays via Electron screen API
@@ -481,9 +571,17 @@ The component serves as a critical foundation for live presentation workflows, e
 3. Test with different display configurations
 4. Monitor for resolution mismatch issues
 
+### Enhanced Preparation List Features
+- **Blank Mode Integration**: Automatic blank mode activation when selecting songs from preparation list
+- **Cleaner Transitions**: Background-only display during preparation phase
+- **Smooth Workflow**: Professional transition experience between songs
+- **State Management**: Proper handling of lyrics and line offset during preparation
+
 ### Performance Optimization Checklist
 - Use hardware-accelerated CSS properties
 - Minimize DOM complexity in projection view
 - Optimize background image loading
 - Implement proper state update throttling
 - Monitor resource usage during presentations
+- Optimize preparation list interaction performance
+- Ensure smooth blank mode transitions

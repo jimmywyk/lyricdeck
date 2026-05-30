@@ -75,6 +75,7 @@ export interface ProjectionState {
   currentArrangementIndex?: number;
   lyrics?: string;
   lineOffset?: number;
+  scrollDuration?: number;
   background: BackgroundSettings;
   textStyle: TextStyle;
   copyright?: string;
