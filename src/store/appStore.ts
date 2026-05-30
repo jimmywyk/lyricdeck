@@ -50,7 +50,7 @@ interface AppStore {
 
   // Actions - Song Library
   setSongs: (songs: Song[]) => void;
-  addSong: () => void;
+  addSong: (defaultSectionLabel?: string) => void;
   deleteSong: (id: string) => void;
   duplicateSong: (id: string) => void;
   updateSong: (id: string, updates: Partial<Song>) => void;
@@ -58,7 +58,7 @@ interface AppStore {
   setSearchQuery: (query: string) => void;
 
   // Actions - Sections
-  addSection: (songId: string, type?: SectionType) => void;
+  addSection: (songId: string, type?: SectionType, localizedTypeName?: string) => void;
   updateSection: (songId: string, sectionId: string, updates: Partial<LyricSection>) => void;
   deleteSection: (songId: string, sectionId: string) => void;
   reorderSections: (songId: string, sections: LyricSection[]) => void;
@@ -113,7 +113,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   // Song Library actions
   setSongs: (songs) => set({ songs }),
 
-  addSong: () => {
+  addSong: (defaultSectionLabel) => {
     const newSong: Song = {
       id: uuidv4(),
       title: 'New Song',
@@ -123,7 +123,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         {
           id: uuidv4(),
           type: 'Verse',
-          label: 'Verse 1',
+          label: defaultSectionLabel || 'Verse 1',
           lyrics: '',
         },
       ],
@@ -183,11 +183,12 @@ export const useAppStore = create<AppStore>((set, get) => ({
   setSearchQuery: (query) => set({ searchQuery: query }),
 
   // Section actions
-  addSection: (songId, type = 'Verse') => {
+  addSection: (songId, type = 'Verse', localizedTypeName) => {
     const song = get().songs.find((s) => s.id === songId);
     if (!song) return;
+    const displayName = localizedTypeName || type;
     const existingSameType = song.sections.filter((s) => s.type === type).length;
-    const label = existingSameType > 0 ? `${type} ${existingSameType + 1}` : type;
+    const label = existingSameType > 0 ? `${displayName} ${existingSameType + 1}` : displayName;
     const newSection: LyricSection = {
       id: uuidv4(),
       type,
@@ -348,13 +349,20 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   selectFromPreparationList: (songId) => {
     set({ selectedSongId: songId, currentArrangementIndex: -1 });
-    // Navigate to first slide of the selected song
+    // Show only the song's background in blank mode (no lyrics yet)
     const song = get().songs.find((s) => s.id === songId);
     if (song) {
-      const arrangement = song.arrangement.length > 0 ? song.arrangement : song.sections.map((s) => s.id);
-      if (arrangement.length > 0) {
-        get().goToSlide(0);
-      }
+      get().setProjectionState({
+        mode: 'blank',
+        currentSongId: song.id,
+        currentSectionId: undefined,
+        currentArrangementIndex: undefined,
+        lyrics: undefined,
+        lineOffset: 0,
+        background: song.presentation.background,
+        textStyle: song.presentation.textStyle,
+        copyright: undefined,
+      });
     }
   },
 

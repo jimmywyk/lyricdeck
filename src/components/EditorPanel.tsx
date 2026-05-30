@@ -104,7 +104,7 @@ export function EditorPanel() {
           ))}
 
           {/* Add Section Button */}
-          <AddSectionButton onAdd={(type) => addSection(song.id, type)} />
+          <AddSectionButton onAdd={(type) => addSection(song.id, type, t.sectionTypes[type])} />
         </div>
       </div>
 

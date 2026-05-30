@@ -253,7 +253,7 @@ export function SettingsPanel() {
               onChange={(e) => updateTextStyle({ fontFamily: e.target.value })}
               className="input text-sm"
             >
-              {['Arial', 'Helvetica', 'Georgia', 'Times New Roman', 'Verdana', 'Trebuchet MS', 'Impact', 'Comic Sans MS'].map(
+              {['Arial', 'Helvetica', 'Georgia', 'Times New Roman', 'Verdana', 'Trebuchet MS', 'Impact', 'Comic Sans MS', '華康超圓體'].map(
                 (font) => (
                   <option key={font} value={font}>
                     {font}

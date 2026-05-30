@@ -2,6 +2,8 @@
 
 <cite>
 **Referenced Files in This Document**
+- [.gitignore](file://.gitignore)
+- [.gitattributes](file://.gitattributes)
 - [README.md](file://README.md)
 - [package.json](file://package.json)
 - [vite.config.ts](file://vite.config.ts)
@@ -18,19 +20,28 @@
 - [tailwind.config.js](file://tailwind.config.js)
 </cite>
 
+## Update Summary
+**Changes Made**
+- Added Git-based development workflow section with proper version control practices
+- Updated installation instructions to reflect repository-based setup
+- Enhanced development workflow documentation with Git configuration details
+- Added troubleshooting guidance for Git-related issues
+- Updated project structure overview to include version control files
+
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [System Requirements](#system-requirements)
 3. [Prerequisites](#prerequisites)
-4. [Installation](#installation)
-5. [Development Workflow](#development-workflow)
-6. [Production Build](#production-build)
-7. [Type Checking](#type-checking)
-8. [Project Structure Overview](#project-structure-overview)
-9. [Platform-Specific Considerations](#platform-specific-considerations)
-10. [Initial Setup Procedures](#initial-setup-procedures)
-11. [Troubleshooting Guide](#troubleshooting-guide)
-12. [Conclusion](#conclusion)
+4. [Git-Based Development Workflow](#git-based-development-workflow)
+5. [Installation](#installation)
+6. [Development Workflow](#development-workflow)
+7. [Production Build](#production-build)
+8. [Type Checking](#type-checking)
+9. [Project Structure Overview](#project-structure-overview)
+10. [Platform-Specific Considerations](#platform-specific-considerations)
+11. [Initial Setup Procedures](#initial-setup-procedures)
+12. [Troubleshooting Guide](#troubleshooting-guide)
+13. [Conclusion](#conclusion)
 
 ## Introduction
 LyricDeck is a cross-platform desktop application for managing song lyrics and live lyric projection. Built with Electron, React 18, TypeScript, Vite, Tailwind CSS, Zustand, and @dnd-kit, it provides a modern desktop experience for churches, worship teams, and presenters who need reliable, local-first lyric management and presentation capabilities.
@@ -53,41 +64,79 @@ These requirements are enforced by the project configuration and scripts. Using 
 - [README.md:29-32](file://README.md#L29-L32)
 - [package.json:58-84](file://package.json#L58-L84)
 
+## Git-Based Development Workflow
+LyricDeck follows a Git-based development workflow with proper version control configuration. The repository includes essential Git configuration files that establish consistent development practices across team members.
+
+### Repository Structure and Version Control
+The project maintains clean separation between tracked and untracked files using `.gitignore` and `.gitattributes`:
+
+- **Tracked files**: Source code, configuration files, documentation, and build artifacts
+- **Ignored files**: Generated directories (`node_modules`, `dist`, `dist-electron`, `.vite`, `out`, `release`), log files, and platform-specific temporary files
+- **Line ending normalization**: Automatic LF normalization for text files, preserving CRLF for Windows batch files
+
+### Branching Strategy
+- **Main branch**: Stable releases and production-ready code
+- **Development branches**: Feature development and experimental changes
+- **Hotfix branches**: Critical bug fixes for production deployments
+
+### Commit Guidelines
+- Use clear, descriptive commit messages following conventional commit format
+- Include relevant issue numbers and brief explanations of changes
+- Keep commits focused and atomic
+
+**Section sources**
+- [.gitignore:1-11](file://.gitignore#L1-L11)
+- [.gitattributes:1-62](file://.gitattributes#L1-L62)
+
 ## Installation
 Follow these steps to install LyricDeck on your local machine:
 
-1. Clone or download the repository to your local machine.
-2. Open a terminal or command prompt in the project root directory.
-3. Install all project dependencies using npm:
+### Option A: Direct Repository Setup
+1. Clone the repository to your local machine:
+   ```bash
+   git clone https://github.com/yourusername/lyricdeck.git
+   cd lyricdeck
+   ```
+
+2. Install all project dependencies using npm:
    ```bash
    npm install
    ```
-   This command installs both runtime and development dependencies defined in the project configuration.
 
-4. Verify the installation by checking that the `node_modules` directory is created and contains the required packages.
+3. Verify the installation by checking that the `node_modules` directory is created and contains the required packages.
+
+### Option B: Download Package
+1. Download the latest release from the repository releases page
+2. Extract the archive to your desired location
+3. Open a terminal or command prompt in the project root directory
+4. Install dependencies:
+   ```bash
+   npm install
+   ```
 
 **Section sources**
 - [README.md:34-38](file://README.md#L34-L38)
 - [package.json:58-96](file://package.json#L58-L96)
 
 ## Development Workflow
-LyricDeck uses Vite for the development server and Electron for the desktop shell. The development workflow enables hot reloading for rapid iteration.
+LyricDeck uses Vite for the development server and Electron for the desktop shell. The development workflow enables hot reloading for rapid iteration with Git-based version control integration.
 
-To start the development environment:
+### Starting the Development Environment
 ```bash
 npm run dev
 ```
 This script launches:
-- Vite's development server
+- Vite's development server on port 5173
 - Electron with automatic page reload when frontend code changes
 
-The development server runs on port 5173 by default. Electron loads the app from the development server during development and from the built files in production.
-
-For an alternative development experience that synchronizes React and Electron builds:
+### Alternative Development Experience
 ```bash
 npm run electron:dev
 ```
 This command concurrently runs Vite and Electron, automatically opening the app after the development server becomes available.
+
+### Development Server Configuration
+The development server runs on port 5173 by default. Electron loads the app from the development server during development and from the built files in production.
 
 **Section sources**
 - [README.md:40-46](file://README.md#L40-L46)
@@ -131,10 +180,14 @@ This command runs the TypeScript compiler in no-emit mode, reporting any type er
 - [tsconfig.json:1-26](file://tsconfig.json#L1-L26)
 
 ## Project Structure Overview
-LyricDeck follows a clear separation between Electron main process, preload context bridge, and React renderer process, with shared TypeScript configuration for both environments.
+LyricDeck follows a clear separation between Electron main process, preload context bridge, and React renderer process, with shared TypeScript configuration for both environments. The project includes proper Git configuration for version control.
 
 ```mermaid
 graph TB
+subgraph "Version Control Configuration"
+GI[".gitignore"]
+GA[".gitattributes"]
+end
 subgraph "Electron Main Process"
 EM["electron/main.ts"]
 EP["electron/preload.ts"]
@@ -164,9 +217,14 @@ VITE --> HTML
 TS --> MAIN
 TSN --> VITE
 FW --> EM
+GI --> NODE_MODULES
+GI --> DIST
+GA --> TEXT_FILES
 ```
 
 **Diagram sources**
+- [.gitignore:1-11](file://.gitignore#L1-L11)
+- [.gitattributes:1-62](file://.gitattributes#L1-L62)
 - [electron/main.ts:1-390](file://electron/main.ts#L1-L390)
 - [electron/preload.ts:1-43](file://electron/preload.ts#L1-L43)
 - [electron/db.ts:1-214](file://electron/db.ts#L1-L214)
@@ -225,28 +283,43 @@ Key initialization points:
 ## Troubleshooting Guide
 Common setup issues and their solutions:
 
-- Node.js or npm version mismatch
-  - Symptom: Build fails with engine compatibility errors
-  - Solution: Upgrade to Node.js 18+ and npm 9+
-  - Verification: Check versions with `node --version` and `npm --version`
+### Git and Version Control Issues
+- **Repository cloning problems**
+  - Symptom: Failed to clone repository or connection timeout
+  - Solution: Check network connectivity and try `git config --global http.postBuffer 524288000`
+  - Alternative: Use SSH keys or GitHub CLI for authentication
 
-- Port conflicts during development
-  - Symptom: Vite fails to start on port 5173
-  - Solution: Stop other processes using the port or configure a different port in Vite configuration
-  - Alternative: Use the Electron-focused development script that waits for the dev server
+- **Line ending conflicts**
+  - Symptom: Unexpected line ending changes in committed files
+  - Solution: Ensure `.gitattributes` is properly configured for your platform
+  - Verification: Check `git config core.autocrlf` setting
 
-- Missing native dependencies
-  - Symptom: Runtime errors related to native modules
-  - Solution: Reinstall dependencies with `npm ci` or clear `node_modules` and reinstall
+- **Large file handling**
+  - Symptom: Large files causing performance issues
+  - Solution: Use Git LFS for binary files or remove unnecessary large files
 
-- Database initialization errors
-  - Symptom: Application fails to load or save data
-  - Solution: Verify the application data directory exists and has write permissions
-  - Location: See platform-specific paths in the data storage section
+### Node.js or npm Version Mismatch
+- **Symptom**: Build fails with engine compatibility errors
+- **Solution**: Upgrade to Node.js 18+ and npm 9+
+- **Verification**: Check versions with `node --version` and `npm --version`
 
-- Projection window issues
-  - Symptom: Projection window does not open or displays incorrectly
-  - Solution: Ensure multiple displays are connected; verify display detection and selection logic
+### Port Conflicts During Development
+- **Symptom**: Vite fails to start on port 5173
+- **Solution**: Stop other processes using the port or configure a different port in Vite configuration
+- **Alternative**: Use the Electron-focused development script that waits for the dev server
+
+### Missing Native Dependencies
+- **Symptom**: Runtime errors related to native modules
+- **Solution**: Reinstall dependencies with `npm ci` or clear `node_modules` and reinstall
+
+### Database Initialization Errors
+- **Symptom**: Application fails to load or save data
+- **Solution**: Verify the application data directory exists and has write permissions
+- **Location**: See platform-specific paths in the data storage section
+
+### Projection Window Issues
+- **Symptom**: Projection window does not open or displays incorrectly
+- **Solution**: Ensure multiple displays are connected; verify display detection and selection logic
 
 **Section sources**
 - [README.md:29-32](file://README.md#L29-L32)
@@ -256,4 +329,4 @@ Common setup issues and their solutions:
 - [README.md:102-107](file://README.md#L102-L107)
 
 ## Conclusion
-You are now ready to develop and build LyricDeck. Use the development workflow for rapid iteration, the production build for distribution, and the type checking process to maintain code quality. For platform-specific packaging and deployment, refer to the build configuration and makers defined in the project settings.
+You are now ready to develop and build LyricDeck using a Git-based development workflow. Use the development workflow for rapid iteration, the production build for distribution, and the type checking process to maintain code quality. For platform-specific packaging and deployment, refer to the build configuration and makers defined in the project settings. The Git configuration ensures consistent development practices across team members and maintains clean repository hygiene.

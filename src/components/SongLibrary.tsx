@@ -86,7 +86,7 @@ export function SongLibrary() {
 
       {/* Add Song Button */}
       <div className="p-3 border-t border-surface-700">
-        <button onClick={addSong} className="btn btn-primary w-full text-sm">
+        <button onClick={() => addSong(t.sectionTypes.Verse + ' 1')} className="btn btn-primary w-full text-sm">
           {t.songLibrary.addSong}
         </button>
       </div>

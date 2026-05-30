@@ -301,32 +301,32 @@ export function PresentPanel() {
             <div className="flex items-center gap-1">
               <span className="text-xs text-surface-400 mr-1">{t.present.shiftUp}:</span>
               <button onClick={() => shiftLines(1)} className="btn btn-secondary text-xs px-2 py-1">
-                Up 1
+                ↑ 1
               </button>
               <button onClick={() => shiftLines(2)} className="btn btn-secondary text-xs px-2 py-1">
-                Up 2
+                ↑ 2
               </button>
               <button onClick={() => shiftLines(3)} className="btn btn-secondary text-xs px-2 py-1">
-                Up 3
+                ↑ 3
               </button>
               <button onClick={() => shiftLines(4)} className="btn btn-secondary text-xs px-2 py-1">
-                Up 4
+                ↑ 4
               </button>
             </div>
             <div className="w-px h-6 bg-surface-700 mx-1" />
             <div className="flex items-center gap-1">
               <span className="text-xs text-surface-400 mr-1">{t.present.shiftDown}:</span>
               <button onClick={() => shiftLines(-1)} className="btn btn-secondary text-xs px-2 py-1">
-                Down 1
+                ↓ 1
               </button>
               <button onClick={() => shiftLines(-2)} className="btn btn-secondary text-xs px-2 py-1">
-                Down 2
+                ↓ 2
               </button>
               <button onClick={() => shiftLines(-3)} className="btn btn-secondary text-xs px-2 py-1">
-                Down 3
+                ↓ 3
               </button>
               <button onClick={() => shiftLines(-4)} className="btn btn-secondary text-xs px-2 py-1">
-                Down 4
+                ↓ 4
               </button>
             </div>
           </div>

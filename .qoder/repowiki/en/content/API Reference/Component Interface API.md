@@ -13,7 +13,17 @@
 - [index.ts](file://src/types/index.ts)
 - [appStore.ts](file://src/store/appStore.ts)
 - [index.ts](file://src/i18n/index.ts)
+- [App.tsx](file://src/App.tsx)
+- [preload.ts](file://electron/preload.ts)
+- [electron.d.ts](file://src/types/electron.d.ts)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Updated ProjectionView component documentation to reflect enhanced null check for Electron API
+- Added robustness information for non-Electron environments
+- Updated component lifecycle documentation to include conditional subscription behavior
+- Enhanced troubleshooting guidance for Electron API availability
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -27,7 +37,7 @@
 9. [Conclusion](#conclusion)
 
 ## Introduction
-This document provides detailed component interface documentation for LyricDeck’s React component API. It covers the props interfaces, event handlers, default values, validation requirements, composition patterns, state prop relationships, lifecycle methods, ref forwarding, accessibility attributes, and integration examples for the following components:
+This document provides detailed component interface documentation for LyricDeck's React component API. It covers the props interfaces, event handlers, default values, validation requirements, composition patterns, state prop relationships, lifecycle methods, ref forwarding, accessibility attributes, and integration examples for the following components:
 - SongLibrary
 - EditorPanel
 - ArrangePanel
@@ -58,6 +68,7 @@ subgraph "State & Types"
 Store["appStore.ts"]
 Types["types/index.ts"]
 I18n["i18n/index.ts"]
+Electron["Electron API"]
 end
 SL --> Store
 EP --> Store
@@ -81,8 +92,10 @@ AP --> I18n
 PP --> I18n
 SP --> I18n
 PV --> I18n
-BG --> I18n
-PL --> I18n
+PV --> Electron
+PP --> Electron
+SP --> Electron
+BG --> Electron
 ```
 
 **Diagram sources**
@@ -112,7 +125,7 @@ PL --> I18n
 - [index.ts:1-43](file://src/i18n/index.ts#L1-L43)
 
 ## Core Components
-This section documents each component’s props, event handlers, defaults, and integration patterns. Where applicable, we note state prop relationships and composition patterns.
+This section documents each component's props, event handlers, defaults, and integration patterns. Where applicable, we note state prop relationships and composition patterns.
 
 ### SongLibrary
 - Purpose: Displays a searchable and sortable list of songs, supports selection, duplication, deletion, and adding to preparation list.
@@ -203,8 +216,12 @@ This section documents each component’s props, event handlers, defaults, and i
 - Composition pattern: Renders black, logo, or live content depending on mode; applies background and text styles.
 - State prop relationships:
   - Subscribes to ProjectionState updates from Electron; maintains local fallback state.
+  - **Enhanced**: Now includes null check for Electron API before subscribing to projection state updates.
 - Accessibility: No interactive elements; content is static per mode.
 - Integration example: Host in a separate Electron window; ensure IPC channel is configured.
+- **Robustness Enhancement**: The component now gracefully handles non-Electron environments by checking for window.electronAPI existence before attempting to subscribe to projection state updates.
+
+**Updated** Enhanced with null check for Electron API to improve robustness in non-Electron environments
 
 **Section sources**
 - [ProjectionView.tsx:4-134](file://src/components/ProjectionView.tsx#L4-L134)
@@ -257,6 +274,7 @@ UI->>Store : Dispatch projection action (e.g., goToSlide)
 Store->>Electron : updateProjection(state)
 Electron-->>PV : onProjectionState(newState)
 PV-->>UI : Re-render with new state
+Note over PV : Enhanced : Null check for Electron API<br/>before subscribing to updates
 ```
 
 **Diagram sources**
@@ -417,13 +435,17 @@ Render --> End(["Done"])
 - Event handlers: None (reads from Electron)
 - Composition: Renders black/logo/live content based on mode; applies background and text styles
 - Validation: None (props are derived from store)
-- Lifecycle: Subscribes to ProjectionState updates via Electron IPC
+- Lifecycle: Subscribes to ProjectionState updates via Electron IPC with null check
 - Accessibility: No interactive elements
+- **Enhanced Robustness**: The component now includes a null check (`if (window.electronAPI)`) before attempting to subscribe to projection state updates, making it compatible with non-Electron environments such as web browsers or development servers.
 
 ```mermaid
 flowchart TD
-Start(["Render ProjectionView"]) --> Subscribe["Subscribe to ProjectionState via Electron"]
+Start(["Render ProjectionView"]) --> CheckAPI{"window.electronAPI exists?"}
+CheckAPI --> |Yes| Subscribe["Subscribe to ProjectionState via Electron"]
+CheckAPI --> |No| Fallback["Use local fallback state only"]
 Subscribe --> Mode{"Mode"}
+Fallback --> Mode
 Mode --> |black| Black["Render solid black"]
 Mode --> |logo| Logo["Render logo overlay"]
 Mode --> |live/blank| Content["Render lyrics with background/text styles"]
@@ -504,12 +526,13 @@ PL-->>User : Re-render with new order
   - i18n store for translations
 - Coupling:
   - Components are loosely coupled via store actions and props
-  - ProjectionView is decoupled from UI via Electron IPC
+  - ProjectionView is decoupled from UI via Electron IPC with enhanced null safety
 - Cohesion:
   - Each component encapsulates its own rendering and interactions
 - External dependencies:
   - @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities
   - Electron IPC channels for projection and file operations
+  - **Enhanced**: Null checks for Electron API across multiple components for improved robustness
 
 ```mermaid
 graph LR
@@ -526,6 +549,7 @@ AP --> DnD["@dnd-kit"]
 PL --> DnD
 PP --> Electron
 SP --> Electron
+PV --> Electron
 ```
 
 **Diagram sources**
@@ -548,11 +572,12 @@ SP --> Electron
 - Memoization: Use memoization for computed lists (filtered/sorted) to avoid unnecessary renders.
 - Drag-and-drop: Ensure efficient reordering and minimal DOM updates during drag operations.
 - Projection updates: Throttle or batch projection state updates to prevent excessive re-renders.
+- **Enhanced**: Electron API null checks prevent unnecessary subscription attempts in non-Electron environments, improving performance and reducing errors.
 
 ## Troubleshooting Guide
 - Missing Electron API:
   - Symptom: Projection controls disabled or image gallery not loading.
-  - Resolution: Ensure Electron API is available in the runtime environment.
+  - Resolution: Ensure Electron API is available in the runtime environment. The ProjectionView component now includes null checks to handle non-Electron environments gracefully.
 - Keyboard shortcuts not working:
   - Symptom: Navigation keys do nothing.
   - Resolution: Verify that focus is not on input/textarea elements; confirm keydown listener is attached.
@@ -562,12 +587,16 @@ SP --> Electron
 - Background image not updating:
   - Symptom: Selected image does not apply.
   - Resolution: Ensure onSelect callback is passed and updateSong is invoked with correct background settings.
+- **New**: ProjectionView not updating in web browser:
+  - Symptom: ProjectionView appears blank or doesn't receive updates.
+  - Resolution: This is expected behavior in non-Electron environments. The component now includes null checks and uses local fallback state. Projection updates will only work when running in an Electron environment with the proper IPC setup.
 
 **Section sources**
 - [PresentPanel.tsx:39-84](file://src/components/PresentPanel.tsx#L39-L84)
 - [ArrangePanel.tsx:28-31](file://src/components/ArrangePanel.tsx#L28-L31)
 - [PreparationList.tsx:38-41](file://src/components/PreparationList.tsx#L38-L41)
 - [BackgroundGallery.tsx:17-40](file://src/components/BackgroundGallery.tsx#L17-L40)
+- [ProjectionView.tsx:22-29](file://src/components/ProjectionView.tsx#L22-L29)
 
 ## Conclusion
-LyricDeck’s component API is designed around a centralized store and Electron integration, enabling modular and composable UI components. Each component exposes a clear interface with minimal props, relying on store actions for state mutations and Electron APIs for advanced features. By following the composition patterns and integration examples outlined here, developers can reliably integrate and extend the component suite while maintaining consistent behavior and accessibility.
+LyricDeck's component API is designed around a centralized store and Electron integration, enabling modular and composable UI components. Each component exposes a clear interface with minimal props, relying on store actions for state mutations and Electron APIs for advanced features. The recent enhancement to ProjectionView with null checks for Electron API significantly improves robustness, making the application more resilient in various deployment environments. By following the composition patterns and integration examples outlined here, developers can reliably integrate and extend the component suite while maintaining consistent behavior and accessibility across different runtime environments.
