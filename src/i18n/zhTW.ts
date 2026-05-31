@@ -98,6 +98,7 @@ export const zhTW: Translations = {
     shiftUp: '上移',
     shiftDown: '下移',
     scrollSpeed: '速度',
+    autoFontSize: '自動調整字體大小',
   },
 
   // Settings

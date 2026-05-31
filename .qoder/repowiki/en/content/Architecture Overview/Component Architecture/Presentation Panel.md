@@ -13,6 +13,14 @@
 - [en.ts](file://src/i18n/en.ts)
 </cite>
 
+## Update Summary
+**Changes Made**
+- Added documentation for new scroll speed control feature in PresentPanel
+- Updated section on line shift controls to include configurable duration parameter
+- Enhanced ProjectionView documentation to cover smooth transition animations
+- Updated state synchronization documentation to include scrollDuration property
+- Added troubleshooting guidance for scroll speed configuration
+
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Project Structure](#project-structure)
@@ -25,19 +33,19 @@
 9. [Conclusion](#conclusion)
 
 ## Introduction
-This document provides comprehensive documentation for the PresentPanel component, which manages live presentation controls for lyric-based presentations. It covers projection window management, keyboard shortcut handling, presentation mode switching (live, blank, black, logo, clear), integration with Electron's window management APIs, IPC communication for projection control, real-time state synchronization between the main window and projection window, display detection and multi-monitor support, and event listeners for keyboard input and projection window lifecycle.
+This document provides comprehensive documentation for the PresentPanel component, which manages live presentation controls for lyric-based presentations. It covers projection window management, keyboard shortcut handling, presentation mode switching (live, blank, black, logo, clear), integration with Electron's window management APIs, IPC communication for projection control, real-time state synchronization between the main window and projection window, display detection and multi-monitor support, event listeners for keyboard input and projection window lifecycle, and the new scroll speed control feature for smooth line transitions.
 
 ## Project Structure
 The presentation system spans both the renderer process (React components) and the Electron main process (window management and IPC). The key files involved are:
-- PresentPanel.tsx: Main presentation UI and controller
-- ProjectionView.tsx: Projection window content renderer
-- appStore.ts: Global state management with projection actions
+- PresentPanel.tsx: Main presentation UI and controller with scroll speed control
+- ProjectionView.tsx: Projection window content renderer with smooth transition animations
+- appStore.ts: Global state management with projection actions including scrollDuration
 - main.ts: Electron main process with window creation and IPC handlers
 - preload.ts: Exposes Electron APIs to renderer via context bridge
-- index.ts: Type definitions for projection state and modes
+- index.ts: Type definitions for projection state including scrollDuration
 - electron.d.ts: TypeScript declarations for window.electronAPI
 - App.tsx: Application shell that routes to ProjectionView in projection mode
-- en.ts: UI text resources for Present panel
+- en.ts: UI text resources for Present panel including scroll speed controls
 
 ```mermaid
 graph TB
@@ -69,29 +77,29 @@ DTS --> PV
 ```
 
 **Diagram sources**
-- [PresentPanel.tsx:1-365](file://src/components/PresentPanel.tsx#L1-L365)
-- [ProjectionView.tsx:1-134](file://src/components/ProjectionView.tsx#L1-L134)
-- [appStore.ts:1-385](file://src/store/appStore.ts#L1-L385)
+- [PresentPanel.tsx:1-395](file://src/components/PresentPanel.tsx#L1-L395)
+- [ProjectionView.tsx:1-138](file://src/components/ProjectionView.tsx#L1-L138)
+- [appStore.ts:1-396](file://src/store/appStore.ts#L1-L396)
 - [main.ts:1-390](file://electron/main.ts#L1-L390)
 - [preload.ts:1-43](file://electron/preload.ts#L1-L43)
-- [index.ts:1-89](file://src/types/index.ts#L1-L89)
+- [index.ts:1-90](file://src/types/index.ts#L1-L90)
 - [electron.d.ts:1-33](file://src/types/electron.d.ts#L1-L33)
 - [App.tsx:1-102](file://src/App.tsx#L1-L102)
 
 **Section sources**
-- [PresentPanel.tsx:1-365](file://src/components/PresentPanel.tsx#L1-L365)
-- [ProjectionView.tsx:1-134](file://src/components/ProjectionView.tsx#L1-L134)
-- [appStore.ts:1-385](file://src/store/appStore.ts#L1-L385)
+- [PresentPanel.tsx:1-395](file://src/components/PresentPanel.tsx#L1-L395)
+- [ProjectionView.tsx:1-138](file://src/components/ProjectionView.tsx#L1-L138)
+- [appStore.ts:1-396](file://src/store/appStore.ts#L1-L396)
 - [main.ts:1-390](file://electron/main.ts#L1-L390)
 - [preload.ts:1-43](file://electron/preload.ts#L1-L43)
-- [index.ts:1-89](file://src/types/index.ts#L1-L89)
+- [index.ts:1-90](file://src/types/index.ts#L1-L90)
 - [electron.d.ts:1-33](file://src/types/electron.d.ts#L1-L33)
 - [App.tsx:1-102](file://src/App.tsx#L1-L102)
 
 ## Core Components
-- PresentPanel: Orchestrates presentation controls, keyboard shortcuts, display selection, and projection window lifecycle. It reads the current song arrangement and renders a preview area with current/next slides, section navigation, and mode buttons.
-- ProjectionView: Renders the projection window content based on the latest projection state received via IPC.
-- appStore: Centralized state for songs, projection state, arrangement index, and projection actions. It synchronizes projection state to the projection window via IPC.
+- PresentPanel: Orchestrates presentation controls, keyboard shortcuts, display selection, projection window lifecycle, and scroll speed control. It reads the current song arrangement and renders a preview area with current/next slides, section navigation, mode buttons, and configurable line shift controls with smooth transitions.
+- ProjectionView: Renders the projection window content based on the latest projection state received via IPC, including smooth transition animations for line offsets.
+- appStore: Centralized state for songs, projection state, arrangement index, and projection actions. It synchronizes projection state including scrollDuration to the projection window via IPC.
 - Electron main process: Creates and manages projection windows, exposes IPC handlers for display detection and projection control, and broadcasts state updates to the projection window.
 - Preload bridge: Exposes a typed electronAPI to renderer code with methods for display management, projection control, and state synchronization.
 
@@ -101,20 +109,22 @@ Key responsibilities:
 - Keyboard shortcuts for navigation and mode switching
 - Projection window lifecycle management (open/close)
 - Mode rendering (live, blank, black, logo, clear)
+- Scroll speed control with configurable duration parameters
+- Smooth transition animations for line offset changes
 
 **Section sources**
 - [PresentPanel.tsx:6-129](file://src/components/PresentPanel.tsx#L6-L129)
-- [ProjectionView.tsx:4-133](file://src/components/ProjectionView.tsx#L4-L133)
+- [ProjectionView.tsx:4-138](file://src/components/ProjectionView.tsx#L4-L138)
 - [appStore.ts:71-302](file://src/store/appStore.ts#L71-L302)
 - [main.ts:111-152](file://electron/main.ts#L111-L152)
 - [preload.ts:3-42](file://electron/preload.ts#L3-L42)
 
 ## Architecture Overview
-The presentation architecture follows a unidirectional data flow:
-- PresentPanel updates appStore with projection actions (mode changes, slide navigation, line shifts).
+The presentation architecture follows a unidirectional data flow with enhanced scroll speed control:
+- PresentPanel updates appStore with projection actions including scrollDuration parameter (mode changes, slide navigation, line shifts with configurable timing).
 - appStore.setProjectionState persists the state and sends it to the projection window via IPC.
 - Electron main process receives state updates and forwards them to the projection window.
-- ProjectionView listens for state updates and re-renders accordingly.
+- ProjectionView listens for state updates and applies smooth transition animations based on scrollDuration.
 
 ```mermaid
 sequenceDiagram
@@ -124,18 +134,18 @@ participant Store as "appStore"
 participant Main as "Electron Main"
 participant Preload as "Preload Bridge"
 participant PV as "ProjectionView"
-User->>PP : "Keyboard shortcut or button click"
-PP->>Store : "setProjectionState(...)"
+User->>PP : "Keyboard shortcut, button click, or scroll speed change"
+PP->>Store : "setProjectionState({scrollDuration : X})"
 Store->>Preload : "updateProjection(state)"
 Preload->>Main : "IPC send 'update-projection'"
 Main->>PV : "webContents.send('projection-state', state)"
-PV->>PV : "onProjectionState callback updates local state"
-PV-->>User : "Updated projection display"
+PV->>PV : "Apply smooth transition with transition : transform Xs linear"
+PV-->>User : "Updated projection display with animation"
 ```
 
 **Diagram sources**
 - [PresentPanel.tsx:39-79](file://src/components/PresentPanel.tsx#L39-L79)
-- [appStore.ts:242-249](file://src/store/appStore.ts#L242-L249)
+- [appStore.ts:300-306](file://src/store/appStore.ts#L300-L306)
 - [preload.ts:11-16](file://electron/preload.ts#L11-L16)
 - [main.ts:186-190](file://electron/main.ts#L186-L190)
 - [ProjectionView.tsx:22-29](file://src/components/ProjectionView.tsx#L22-L29)
@@ -149,11 +159,14 @@ Responsibilities:
 - Projection lifecycle: Opens/closes the projection window and updates UI state.
 - Preview rendering: Shows current and next slides with background styling and text styles.
 - Mode controls: Buttons to switch between live, blank, black, logo, and clear modes.
+- Scroll speed control: Configurable duration parameter for line shift animations with input field and validation.
 
 Key behaviors:
 - Keyboard handling prevents default actions for navigation and mode keys and avoids triggering during text input.
 - Projection window opens on a selected display and closes gracefully, updating the isProjectionOpen flag.
 - Preview area renders based on current projection mode and song data.
+- Scroll speed input validates numeric values and prevents negative durations.
+- Line shift buttons pass scrollDuration parameter to shiftLines function for smooth transitions.
 
 ```mermaid
 flowchart TD
@@ -172,7 +185,10 @@ ToggleBlack --> UpdateStore
 ToggleClear --> UpdateStore
 ToggleProjection --> OpenCloseProj["Open/Close projection window"]
 ResetMode --> UpdateStore
-UpdateStore --> IPC["Send state via IPC"]
+UpdateStore --> ScrollSpeedCheck{"Line Shift?"}
+ScrollSpeedCheck --> |Yes| SetDuration["Set scrollDuration parameter"]
+ScrollSpeedCheck --> |No| IPC["Send state via IPC"]
+SetDuration --> IPC
 OpenCloseProj --> UpdateStore
 IPC --> End(["UI Updates"])
 ```
@@ -180,6 +196,7 @@ IPC --> End(["UI Updates"])
 **Diagram sources**
 - [PresentPanel.tsx:39-79](file://src/components/PresentPanel.tsx#L39-L79)
 - [PresentPanel.tsx:109-129](file://src/components/PresentPanel.tsx#L109-L129)
+- [PresentPanel.tsx:317-363](file://src/components/PresentPanel.tsx#L317-L363)
 - [appStore.ts:242-295](file://src/store/appStore.ts#L242-L295)
 
 **Section sources**
@@ -188,6 +205,7 @@ IPC --> End(["UI Updates"])
 - [PresentPanel.tsx:109-129](file://src/components/PresentPanel.tsx#L109-L129)
 - [PresentPanel.tsx:196-232](file://src/components/PresentPanel.tsx#L196-L232)
 - [PresentPanel.tsx:265-297](file://src/components/PresentPanel.tsx#L265-L297)
+- [PresentPanel.tsx:317-363](file://src/components/PresentPanel.tsx#L317-L363)
 
 ### ProjectionView Component
 Responsibilities:
@@ -195,20 +213,25 @@ Responsibilities:
 - Renders different modes:
   - Black: Solid black background.
   - Logo: Watermarked "LyricDeck" text centered.
-  - Live/Blank: Lyrics with customizable background, text style, and optional copyright.
+  - Live/Blank: Lyrics with customizable background, text style, optional copyright, and smooth line transitions.
 - Applies background overlays and text styling based on state.
-- Supports line offset for fine-tuning text position.
+- Supports line offset for fine-tuning text position with configurable animation duration.
+- Implements smooth transition animations using CSS transform properties.
 
 Rendering logic:
 - Uses state.mode to decide which render branch to take.
 - Applies background styles (color, gradient, image) and optional blur.
 - Computes vertical alignment based on text style vertical position.
 - Adds overlay color/opacity when configured.
+- Applies smooth transitions using transform property with scrollDuration parameter.
+
+**Updated** Added smooth transition animations for line offset changes based on scrollDuration property.
 
 **Section sources**
 - [ProjectionView.tsx:4-29](file://src/components/ProjectionView.tsx#L4-L29)
 - [ProjectionView.tsx:77-87](file://src/components/ProjectionView.tsx#L77-L87)
-- [ProjectionView.tsx:93-131](file://src/components/ProjectionView.tsx#L93-L131)
+- [ProjectionView.tsx:93-138](file://src/components/ProjectionView.tsx#L93-L138)
+- [ProjectionView.tsx:109-125](file://src/components/ProjectionView.tsx#L109-L125)
 
 ### Electron Main Process and IPC
 Electron main process responsibilities:
@@ -246,17 +269,19 @@ The preload bridge exposes a strongly-typed electronAPI to renderer code:
 
 ### State Synchronization and Modes
 State model:
-- ProjectionState includes mode, current song/section identifiers, lyrics, line offset, background, text style, and optional copyright.
+- ProjectionState includes mode, current song/section identifiers, lyrics, line offset, scrollDuration, background, text style, and optional copyright.
 - Modes: live, blank, black, logo, clear.
 
 Synchronization flow:
-- PresentPanel triggers actions in appStore.
+- PresentPanel triggers actions in appStore with scrollDuration parameter for line shifts.
 - appStore.setProjectionState merges partial state and sends via IPC.
 - Electron main process forwards state to projection window.
-- ProjectionView updates its internal state and re-renders.
+- ProjectionView updates its internal state, applies smooth transitions, and re-renders.
+
+**Updated** Added scrollDuration property to ProjectionState for controlling animation duration.
 
 **Section sources**
-- [index.ts:69-81](file://src/types/index.ts#L69-L81)
+- [index.ts:71-82](file://src/types/index.ts#L71-L82)
 - [appStore.ts:242-249](file://src/store/appStore.ts#L242-L249)
 - [main.ts:186-190](file://electron/main.ts#L186-L190)
 - [ProjectionView.tsx:22-29](file://src/components/ProjectionView.tsx#L22-L29)
@@ -285,18 +310,20 @@ Shortcuts:
 - Escape: Reset to live mode if not live
 
 UI text resources:
-- Present panel labels and hint text are localized via i18n.
+- Present panel labels and hint text are localized via i18n, including new scroll speed control labels.
+
+**Updated** Added scroll speed control UI elements with localized text resources.
 
 **Section sources**
 - [PresentPanel.tsx:39-79](file://src/components/PresentPanel.tsx#L39-L79)
-- [en.ts:77-98](file://src/i18n/en.ts#L77-L98)
+- [en.ts:77-99](file://src/i18n/en.ts#L77-L99)
 
 ## Dependency Analysis
 The PresentPanel depends on:
-- appStore for state and actions
+- appStore for state and actions including scrollDuration parameter
 - window.electronAPI for display and projection control
-- i18n for UI text
-- ProjectionView for rendering in projection mode
+- i18n for UI text including scroll speed control labels
+- ProjectionView for rendering in projection mode with smooth transitions
 
 The Electron main process depends on:
 - screen API for display detection
@@ -333,6 +360,9 @@ APP["App.tsx"] --> PV
 - Efficient state updates: appStore.setProjectionState merges partial state and batches IPC updates to the projection window.
 - Projection window optimizations: Uses alwaysOnTop and skipTaskbar to keep projection window lightweight and focused.
 - Background rendering: ProjectionView computes styles dynamically; consider caching computed styles if performance becomes a concern.
+- Animation performance: Smooth transitions use CSS transforms which are hardware-accelerated; avoid excessive animation frequency to maintain performance.
+
+**Updated** Added performance considerations for smooth transition animations.
 
 ## Troubleshooting Guide
 Common issues and resolutions:
@@ -356,12 +386,28 @@ Common issues and resolutions:
 - Projection window closes unexpectedly:
   - The main window listens for 'projection-window-closed' and sets isProjectionOpen to false. This is expected behavior when the projection window is closed externally.
 
+- Scroll speed control not working:
+  - Verify that the scroll speed input accepts numeric values with decimal precision (step 0.1).
+  - Ensure scrollDuration parameter is passed correctly to shiftLines function.
+  - Check that ProjectionView applies transition property only when scrollDuration > 0.
+
+- Smooth transition animations not appearing:
+  - Confirm that scrollDuration is greater than 0 in the projection state.
+  - Verify that CSS transition property is applied to the text element in ProjectionView.
+  - Ensure transform property is calculated correctly based on lineOffset and text styling.
+
+**Updated** Added troubleshooting guidance for scroll speed control and smooth transition animations.
+
 **Section sources**
 - [PresentPanel.tsx:26-36](file://src/components/PresentPanel.tsx#L26-L36)
 - [PresentPanel.tsx:39-79](file://src/components/PresentPanel.tsx#L39-L79)
+- [PresentPanel.tsx:317-363](file://src/components/PresentPanel.tsx#L317-L363)
 - [main.ts:111-152](file://electron/main.ts#L111-L152)
 - [main.ts:186-190](file://electron/main.ts#L186-L190)
+- [ProjectionView.tsx:117-121](file://src/components/ProjectionView.tsx#L117-L121)
 - [App.tsx:34-42](file://src/App.tsx#L34-L42)
 
 ## Conclusion
-The PresentPanel component provides a robust foundation for managing live presentations with real-time state synchronization, multi-monitor support, and comprehensive keyboard controls. Its integration with Electron's window management APIs and IPC ensures reliable projection control, while the ProjectionView component delivers flexible rendering across various presentation modes. Proper handling of lifecycle events and display detection enables smooth operation in diverse environments.
+The PresentPanel component provides a robust foundation for managing live presentations with real-time state synchronization, multi-monitor support, comprehensive keyboard controls, and the new scroll speed control feature. Its integration with Electron's window management APIs and IPC ensures reliable projection control, while the ProjectionView component delivers flexible rendering across various presentation modes with smooth transition animations. The addition of configurable scroll speed allows presenters to fine-tune the timing of line offset changes for professional presentations. Proper handling of lifecycle events, display detection, and scroll duration validation enables smooth operation in diverse environments.
+
+**Updated** Enhanced conclusion to include the new scroll speed control feature and its benefits for presentation quality.

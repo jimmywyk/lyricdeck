@@ -3,6 +3,39 @@ import { useAppStore } from '../store/appStore';
 import { useI18n } from '../i18n';
 import { PreparationList } from './PreparationList';
 
+function calculateOptimalFontSize(
+  lyrics: string,
+  fontFamily: string,
+  fontWeight: string,
+  availableWidth: number,
+  maxFontSize: number
+): number {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return maxFontSize;
+
+  const lines = lyrics.split('\n').filter((l) => l.trim().length > 0);
+  if (lines.length === 0) return maxFontSize;
+
+  const longestLine = lines.reduce((a, b) => (a.length > b.length ? a : b), '');
+
+  let low = 10;
+  let high = maxFontSize;
+
+  while (low < high) {
+    const mid = Math.ceil((low + high + 1) / 2);
+    ctx.font = `${fontWeight} ${mid}px "${fontFamily}"`;
+    const width = ctx.measureText(longestLine).width;
+    if (width <= availableWidth) {
+      low = mid;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  return low;
+}
+
 export function PresentPanel() {
   const {
     songs,
@@ -23,6 +56,39 @@ export function PresentPanel() {
   const [displays, setDisplays] = useState<any[]>([]);
   const [selectedDisplay, setSelectedDisplay] = useState<string>('');
   const [scrollSpeed, setScrollSpeed] = useState<number>(0);
+  const [autoFontSize, setAutoFontSize] = useState<boolean>(true);
+
+  // Compute uniform auto font size across ALL sections of the song
+  const { setAutoFontSizeValue } = useAppStore();
+  useEffect(() => {
+    if (!autoFontSize || !song) {
+      setAutoFontSizeValue(null);
+      return;
+    }
+
+    const ts = song.presentation.textStyle;
+    const targetDisplay = displays.find((d) => d.id === selectedDisplay);
+    const projectorWidth = targetDisplay?.bounds?.width || 1920;
+    const availableWidth = projectorWidth * 0.85 - 128;
+    const maxFontSize = ts.fontSize;
+
+    // Find optimal size for the longest line across ALL sections in the arrangement
+    const arrangement =
+      song.arrangement.length > 0 ? song.arrangement : song.sections.map((s) => s.id);
+    const allLyrics = arrangement
+      .map((id) => song.sections.find((s) => s.id === id)?.lyrics || '')
+      .join('\n');
+
+    const optimalSize = calculateOptimalFontSize(
+      allLyrics,
+      ts.fontFamily,
+      ts.fontWeight,
+      availableWidth,
+      maxFontSize
+    );
+
+    setAutoFontSizeValue(optimalSize);
+  }, [autoFontSize, selectedSongId, selectedDisplay, displays, song]);
 
   // Load displays
   useEffect(() => {
@@ -280,7 +346,7 @@ export function PresentPanel() {
             </div>
 
             {/* Control Buttons */}
-            <div className="flex items-center gap-2 justify-center">
+            <div className="flex items-center gap-2 justify-center flex-wrap">
               <button onClick={prevSlide} className="btn btn-secondary text-sm px-6">
                 {t.present.prev}
               </button>
@@ -312,6 +378,16 @@ export function PresentPanel() {
               >
                 {t.present.clear}
               </button>
+              <div className="w-px h-8 bg-surface-700 mx-2" />
+              <label className="flex items-center gap-1.5 text-xs text-surface-300 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={autoFontSize}
+                  onChange={(e) => setAutoFontSize(e.target.checked)}
+                  className="w-3.5 h-3.5 rounded border-surface-500 accent-primary-500"
+                />
+                {t.present.autoFontSize}
+              </label>
             </div>
 
             {/* Line Shift Buttons */}

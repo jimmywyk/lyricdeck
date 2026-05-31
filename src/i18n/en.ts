@@ -96,6 +96,7 @@ export const en = {
     shiftUp: 'Shift Up',
     shiftDown: 'Shift Down',
     scrollSpeed: 'Speed',
+    autoFontSize: 'Auto Font Size',
   },
 
   // Settings

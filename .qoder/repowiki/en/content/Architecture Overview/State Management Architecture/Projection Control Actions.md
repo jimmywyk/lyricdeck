@@ -12,6 +12,13 @@
 - [en.ts](file://src/i18n/en.ts)
 </cite>
 
+## Update Summary
+**Changes Made**
+- Enhanced shiftLines action documentation with new duration parameter
+- Added scrollDuration state property documentation and its role in smooth line transitions
+- Updated line shifting functionality section to cover scroll speed control and animation timing
+- Added information about scroll speed UI controls and their integration with shiftLines
+
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Project Structure](#project-structure)
@@ -24,7 +31,7 @@
 9. [Conclusion](#conclusion)
 
 ## Introduction
-This document provides comprehensive documentation for projection control actions in the LyricDeck application. It covers the projection state structure, slide navigation logic, mode switching between live, blank, black, and logo modes, Electron IPC integration for real-time projection updates, line shifting functionality, projection window management, and automatic state synchronization between main and renderer processes.
+This document provides comprehensive documentation for projection control actions in the LyricDeck application. It covers the projection state structure, slide navigation logic, mode switching between live, blank, black, and logo modes, Electron IPC integration for real-time projection updates, line shifting functionality with enhanced scroll duration support, projection window management, and automatic state synchronization between main and renderer processes.
 
 ## Project Structure
 The projection system spans three main areas:
@@ -56,14 +63,14 @@ Main --> Projection
 ```
 
 **Diagram sources**
-- [appStore.ts:1-385](file://src/store/appStore.ts#L1-L385)
-- [PresentPanel.tsx:1-365](file://src/components/PresentPanel.tsx#L1-L365)
-- [ProjectionView.tsx:1-134](file://src/components/ProjectionView.tsx#L1-L134)
+- [appStore.ts:1-396](file://src/store/appStore.ts#L1-L396)
+- [PresentPanel.tsx:1-469](file://src/components/PresentPanel.tsx#L1-L469)
+- [ProjectionView.tsx:1-138](file://src/components/ProjectionView.tsx#L1-L138)
 - [main.ts:1-390](file://electron/main.ts#L1-L390)
 - [preload.ts:1-43](file://electron/preload.ts#L1-L43)
 
 **Section sources**
-- [appStore.ts:1-385](file://src/store/appStore.ts#L1-L385)
+- [appStore.ts:1-396](file://src/store/appStore.ts#L1-L396)
 - [main.ts:1-390](file://electron/main.ts#L1-L390)
 
 ## Core Components
@@ -81,6 +88,7 @@ class ProjectionState {
 +number? currentArrangementIndex
 +string? lyrics
 +number? lineOffset
++number? scrollDuration
 +BackgroundSettings background
 +TextStyle textStyle
 +string? copyright
@@ -111,7 +119,7 @@ ProjectionState --> TextStyle : "has"
 ```
 
 **Diagram sources**
-- [index.ts:69-81](file://src/types/index.ts#L69-L81)
+- [index.ts:71-82](file://src/types/index.ts#L71-L82)
 - [index.ts:21-42](file://src/types/index.ts#L21-L42)
 
 Key characteristics:
@@ -121,9 +129,10 @@ Key characteristics:
 - Black mode displays solid black
 - Logo mode shows a subtle brand watermark
 - Clear mode displays nothing (useful for transitions)
+- **Updated** scrollDuration property enables smooth line transition animations
 
 **Section sources**
-- [index.ts:69-81](file://src/types/index.ts#L69-L81)
+- [index.ts:71-82](file://src/types/index.ts#L71-L82)
 
 ### Projection Control Actions
 
@@ -141,7 +150,7 @@ Integration points:
 - Projection View: subscribes to state changes
 
 **Section sources**
-- [appStore.ts:242-249](file://src/store/appStore.ts#L242-L249)
+- [appStore.ts:243-250](file://src/store/appStore.ts#L243-L250)
 - [main.ts:186-190](file://electron/main.ts#L186-L190)
 - [preload.ts:10-16](file://electron/preload.ts#L10-L16)
 - [ProjectionView.tsx:22-29](file://src/components/ProjectionView.tsx#L22-L29)
@@ -160,7 +169,7 @@ Slide resolution:
 - Index validation prevents out-of-bounds navigation
 
 **Section sources**
-- [appStore.ts:251-274](file://src/store/appStore.ts#L251-L274)
+- [appStore.ts:252-275](file://src/store/appStore.ts#L252-L275)
 
 #### nextSlide
 Advances to the next slide in the arrangement.
@@ -171,7 +180,7 @@ Behavior:
 - No-op if already at last slide
 
 **Section sources**
-- [appStore.ts:276-284](file://src/store/appStore.ts#L276-L284)
+- [appStore.ts:277-285](file://src/store/appStore.ts#L277-L285)
 
 #### prevSlide
 Moves to the previous slide in the arrangement.
@@ -182,7 +191,7 @@ Behavior:
 - No-op if already at first slide
 
 **Section sources**
-- [appStore.ts:286-291](file://src/store/appStore.ts#L286-L291)
+- [appStore.ts:287-292](file://src/store/appStore.ts#L287-L292)
 
 #### setProjectionMode
 Switches between projection modes without changing slide content.
@@ -193,7 +202,7 @@ Behavior:
 - Supports cycling between black and live modes
 
 **Section sources**
-- [appStore.ts:293-295](file://src/store/appStore.ts#L293-L295)
+- [appStore.ts:294-296](file://src/store/appStore.ts#L294-L296)
 
 #### setIsProjectionOpen
 Manages the projection window open/closed state in the renderer store.
@@ -204,20 +213,30 @@ Behavior:
 - Synchronized with main process via window events
 
 **Section sources**
-- [appStore.ts:297](file://src/store/appStore.ts#L297)
+- [appStore.ts:298](file://src/store/appStore.ts#L298)
 
 #### shiftLines
-Fine-tunes text positioning by adjusting line offset.
+**Updated** Fine-tunes text positioning by adjusting line offset with optional smooth scrolling animation.
 
-Behavior:
+Enhanced Behavior:
 - Adds offset to current lineOffset value
 - Uses offset to translate text vertically
+- **New** Optional durationSec parameter controls animation duration in seconds
+- **New** scrollDuration property stores the animation duration for CSS transitions
 - Each offset unit equals one line height multiplied by font size and line height
-- Enables precise text placement adjustments
+- Enables precise text placement adjustments with smooth transitions
+- **New** Duration of 0 disables animation (immediate positioning)
+
+Animation Integration:
+- Uses CSS transition property with scrollDuration value
+- Applies linear timing function for consistent animation speed
+- Automatically applies transform: translateY() with calculated pixel values
+- Integrates with PresentPanel scroll speed controls
 
 **Section sources**
-- [appStore.ts:299-302](file://src/store/appStore.ts#L299-L302)
-- [ProjectionView.tsx:114-117](file://src/components/ProjectionView.tsx#L114-L117)
+- [appStore.ts:300-306](file://src/store/appStore.ts#L300-L306)
+- [ProjectionView.tsx:114-121](file://src/components/ProjectionView.tsx#L114-L121)
+- [PresentPanel.tsx:394-404](file://src/components/PresentPanel.tsx#L394-L404)
 
 ## Architecture Overview
 The projection system uses a unidirectional data flow with real-time synchronization between the main and renderer processes.
@@ -241,7 +260,7 @@ Note over Store,ProjWin : Real-time synchronization
 
 **Diagram sources**
 - [PresentPanel.tsx:13-19](file://src/components/PresentPanel.tsx#L13-L19)
-- [appStore.ts:242-249](file://src/store/appStore.ts#L242-L249)
+- [appStore.ts:243-250](file://src/store/appStore.ts#L243-L250)
 - [preload.ts:10-16](file://electron/preload.ts#L10-L16)
 - [main.ts:186-190](file://electron/main.ts#L186-L190)
 - [ProjectionView.tsx:22-29](file://src/components/ProjectionView.tsx#L22-L29)
@@ -270,7 +289,7 @@ SyncIPC --> Render["Re-render projection"]
 ```
 
 **Diagram sources**
-- [appStore.ts:251-274](file://src/store/appStore.ts#L251-L274)
+- [appStore.ts:252-275](file://src/store/appStore.ts#L252-L275)
 
 Key behaviors:
 - Dynamic arrangement resolution: uses custom arrangement if defined, otherwise falls back to sections
@@ -279,7 +298,7 @@ Key behaviors:
 - Comprehensive state building including lyrics, background, and text styling
 
 **Section sources**
-- [appStore.ts:251-274](file://src/store/appStore.ts#L251-L274)
+- [appStore.ts:252-275](file://src/store/appStore.ts#L252-L275)
 
 ### Mode Switching Implementation
 The projection system supports five distinct modes with specific rendering behaviors.
@@ -311,7 +330,7 @@ Clear --> Logo : setProjectionMode('logo')
 
 **Diagram sources**
 - [ProjectionView.tsx:77-87](file://src/components/ProjectionView.tsx#L77-L87)
-- [appStore.ts:293-295](file://src/store/appStore.ts#L293-L295)
+- [appStore.ts:294-296](file://src/store/appStore.ts#L294-L296)
 
 Rendering differences:
 - Black: Solid black background
@@ -321,7 +340,7 @@ Rendering differences:
 - Clear: Transparent/empty state
 
 **Section sources**
-- [ProjectionView.tsx:76-131](file://src/components/ProjectionView.tsx#L76-L131)
+- [ProjectionView.tsx:76-138](file://src/components/ProjectionView.tsx#L76-L138)
 
 ### Electron IPC Integration
 Real-time projection updates flow through a well-defined IPC pipeline.
@@ -341,7 +360,7 @@ Projection->>Projection : Re-render with new state
 ```
 
 **Diagram sources**
-- [appStore.ts:246-248](file://src/store/appStore.ts#L246-L248)
+- [appStore.ts:246-250](file://src/store/appStore.ts#L246-L250)
 - [preload.ts:11](file://electron/preload.ts#L11)
 - [main.ts:186-190](file://electron/main.ts#L186-L190)
 - [ProjectionView.tsx:24-26](file://src/components/ProjectionView.tsx#L24-L26)
@@ -387,33 +406,47 @@ Display selection logic:
 **Section sources**
 - [main.ts:111-152](file://electron/main.ts#L111-L152)
 
-### Line Shifting Functionality
-Fine-tuning text positioning through line offset calculations.
+### Enhanced Line Shifting Functionality
+**Updated** Fine-tuning text positioning through line offset calculations with smooth scrolling animations.
 
 ```mermaid
 flowchart TD
-ShiftRequest["shiftLines(offset)"] --> GetCurrent["Get current lineOffset"]
+ShiftRequest["shiftLines(offset, durationSec)"] --> GetCurrent["Get current lineOffset"]
 GetCurrent --> Calculate["Calculate new offset = current + offset"]
 Calculate --> UpdateState["Update projectionState.lineOffset"]
-UpdateState --> ApplyTransform["Apply CSS transform"]
-ApplyTransform --> Render["Re-render with translation"]
+UpdateState --> SetDuration["Set scrollDuration = durationSec ?? 0"]
+SetDuration --> ApplyTransform["Apply CSS transform"]
+ApplyTransform --> ConfigureTransition["Configure CSS transition"]
+ConfigureTransition --> Render["Re-render with animation"]
 TransformCalc["transform: translateY(-offset × fontSize × lineHeight)"]
+TransitionConfig["transition: transform durationSec linear"]
 Render --> TransformCalc
+TransformCalc --> TransitionConfig
 ```
 
 **Diagram sources**
-- [appStore.ts:299-302](file://src/store/appStore.ts#L299-L302)
-- [ProjectionView.tsx:114-117](file://src/components/ProjectionView.tsx#L114-L117)
+- [appStore.ts:300-306](file://src/store/appStore.ts#L300-L306)
+- [ProjectionView.tsx:114-121](file://src/components/ProjectionView.tsx#L114-L121)
 
 Precision calculation:
 - Each offset unit equals one line height
 - Multiplied by font size and line height for proportional movement
 - Negative offsets move text upward (shift up)
 - Positive offsets move text downward (shift down)
+- **New** Duration parameter controls animation timing in seconds
+- **New** 0 duration creates instant positioning without animation
+- **New** Non-zero duration creates smooth linear transitions
+
+Scroll Speed Control Integration:
+- **New** PresentPanel includes scroll speed input field
+- **New** Scroll speed value passed as duration parameter to shiftLines
+- **New** Real-time adjustment of animation speed
+- **New** Input validation ensures non-negative values
 
 **Section sources**
-- [appStore.ts:299-302](file://src/store/appStore.ts#L299-L302)
-- [ProjectionView.tsx:114-117](file://src/components/ProjectionView.tsx#L114-L117)
+- [appStore.ts:300-306](file://src/store/appStore.ts#L300-L306)
+- [ProjectionView.tsx:114-121](file://src/components/ProjectionView.tsx#L114-L121)
+- [PresentPanel.tsx:394-404](file://src/components/PresentPanel.tsx#L394-L404)
 
 ## Dependency Analysis
 The projection system exhibits clean separation of concerns with minimal coupling between components.
@@ -444,9 +477,9 @@ Main --> Projection
 ```
 
 **Diagram sources**
-- [appStore.ts:1-385](file://src/store/appStore.ts#L1-L385)
-- [PresentPanel.tsx:1-365](file://src/components/PresentPanel.tsx#L1-L365)
-- [ProjectionView.tsx:1-134](file://src/components/ProjectionView.tsx#L1-L134)
+- [appStore.ts:1-396](file://src/store/appStore.ts#L1-L396)
+- [PresentPanel.tsx:1-469](file://src/components/PresentPanel.tsx#L1-L469)
+- [ProjectionView.tsx:1-138](file://src/components/ProjectionView.tsx#L1-L138)
 - [main.ts:1-390](file://electron/main.ts#L1-L390)
 - [preload.ts:1-43](file://electron/preload.ts#L1-L43)
 
@@ -455,20 +488,24 @@ Key dependencies:
 - ProjectionView depends on electronAPI for state subscription
 - Main process depends on preload bridge for IPC communication
 - Types define shared interfaces across all layers
+- **New** PresentPanel depends on scroll speed state for duration control
 
 **Section sources**
-- [appStore.ts:1-385](file://src/store/appStore.ts#L1-L385)
-- [PresentPanel.tsx:1-365](file://src/components/PresentPanel.tsx#L1-L365)
-- [ProjectionView.tsx:1-134](file://src/components/ProjectionView.tsx#L1-L134)
+- [appStore.ts:1-396](file://src/store/appStore.ts#L1-L396)
+- [PresentPanel.tsx:1-469](file://src/components/PresentPanel.tsx#L1-L469)
+- [ProjectionView.tsx:1-138](file://src/components/ProjectionView.tsx#L1-L138)
 
 ## Performance Considerations
 The projection system is designed for real-time responsiveness with several performance optimizations:
 
 - Minimal state updates: Only changed fields are sent via IPC
 - Efficient rendering: CSS transforms for line shifting avoid DOM reflow
+- **New** Smooth animations: Linear timing function ensures consistent animation speed
+- **New** Animation optimization: scrollDuration of 0 bypasses transition overhead
 - Lazy initialization: Projection window created only when needed
 - Event cleanup: Proper removal of IPC listeners to prevent memory leaks
 - Bounds checking: Prevents unnecessary computations for invalid indices
+- **New** Animation throttling: Smooth transitions reduce visual flicker during rapid adjustments
 
 ## Troubleshooting Guide
 
@@ -490,14 +527,26 @@ The projection system is designed for real-time responsiveness with several perf
 - Check for empty arrangements causing index out of bounds
 
 #### Line Shifting Not Working
-- Verify lineOffset is being applied in CSS transform
+- **Updated** Verify lineOffset is being applied in CSS transform
 - Check font size and line height calculations
 - Ensure negative/positive offset directions match expectations
+- **New** Verify scrollDuration is properly set in projection state
+- **New** Check that transition property is applied when duration > 0
+- **New** Ensure scroll speed input is properly bound to shiftLines calls
+
+#### Animation Issues
+- **New** Verify scrollDuration property is included in projection state
+- **New** Check that CSS transition uses correct duration value
+- **New** Ensure duration parameter is passed correctly from PresentPanel
+- **New** Verify linear timing function is applied consistently
 
 **Section sources**
 - [main.ts:166-184](file://electron/main.ts#L166-L184)
 - [preload.ts:17-21](file://electron/preload.ts#L17-L21)
-- [ProjectionView.tsx:114-117](file://src/components/ProjectionView.tsx#L114-L117)
+- [ProjectionView.tsx:114-121](file://src/components/ProjectionView.tsx#L114-L121)
+- [PresentPanel.tsx:394-404](file://src/components/PresentPanel.tsx#L394-L404)
 
 ## Conclusion
-The LyricDeck projection control system provides a robust, real-time presentation solution with clean separation between state management, UI components, and Electron window management. The five core actions (setProjectionState, goToSlide, nextSlide, prevSlide, setProjectionMode, setIsProjectionOpen, shiftLines) work together to create a seamless projection experience with automatic state synchronization and flexible mode switching. The system's architecture supports future enhancements while maintaining performance and reliability for live presentations.
+The LyricDeck projection control system provides a robust, real-time presentation solution with clean separation between state management, UI components, and Electron window management. The five core actions (setProjectionState, goToSlide, nextSlide, prevSlide, setProjectionMode, setIsProjectionOpen, shiftLines) work together to create a seamless projection experience with automatic state synchronization and flexible mode switching. 
+
+**Updated** The enhanced shiftLines action with scrollDuration support adds sophisticated animation capabilities, allowing presenters to create smooth, professional-looking text transitions with adjustable speed control. The integration with PresentPanel's scroll speed controls provides intuitive real-time adjustment of animation timing, while the underlying CSS transition system ensures consistent performance across different display configurations. The system's architecture supports future enhancements while maintaining performance and reliability for live presentations.

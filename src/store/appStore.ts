@@ -41,6 +41,7 @@ interface AppStore {
   // Projection
   projectionState: ProjectionState;
   currentArrangementIndex: number;
+  autoFontSizeValue: number | null;
 
   // Settings
   settings: AppSettings;
@@ -76,6 +77,7 @@ interface AppStore {
   setProjectionMode: (mode: ProjectionState['mode']) => void;
   setIsProjectionOpen: (open: boolean) => void;
   shiftLines: (offset: number, durationSec?: number) => void;
+  setAutoFontSizeValue: (value: number | null) => void;
 
   // Actions - UI
   setActiveTab: (tab: AppStore['activeTab']) => void;
@@ -104,6 +106,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   isProjectionOpen: false,
   projectionState: defaultProjectionState,
   currentArrangementIndex: -1,
+  autoFontSizeValue: null,
   settings: {
     defaultBackground,
     defaultTextStyle,
@@ -260,6 +263,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
     if (!section) return;
 
     const background = section.backgroundOverride || song.presentation.background;
+    const textStyle = { ...song.presentation.textStyle };
+    // Apply auto font size if set
+    const autoSize = get().autoFontSizeValue;
+    if (autoSize !== null) {
+      textStyle.fontSize = autoSize;
+    }
+
     set({ currentArrangementIndex: index });
     get().setProjectionState({
       mode: 'live',
@@ -269,7 +279,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       lyrics: section.lyrics,
       lineOffset: 0,
       background,
-      textStyle: song.presentation.textStyle,
+      textStyle,
       copyright: song.presentation.showCopyright ? song.metadata.copyright : undefined,
     });
   },
@@ -304,6 +314,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
       scrollDuration: durationSec ?? 0,
     });
   },
+
+  setAutoFontSizeValue: (value) => set({ autoFontSizeValue: value }),
 
   // UI actions
   setActiveTab: (tab) => set({ activeTab: tab }),

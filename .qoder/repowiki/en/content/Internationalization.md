@@ -8,6 +8,7 @@
 - [App.tsx](file://src/App.tsx)
 - [SettingsPanel.tsx](file://src/components/SettingsPanel.tsx)
 - [ProjectionView.tsx](file://src/components/ProjectionView.tsx)
+- [PresentPanel.tsx](file://src/components/PresentPanel.tsx)
 - [appStore.ts](file://src/store/appStore.ts)
 - [EditorPanel.tsx](file://src/components/EditorPanel.tsx)
 - [SongLibrary.tsx](file://src/components/SongLibrary.tsx)
@@ -19,10 +20,10 @@
 
 ## Update Summary
 **Changes Made**
-- Updated Action Enhancement section to document new optional parameters in addSong and addSection actions
-- Added new section documenting dynamic section labeling capabilities
-- Updated component usage examples to show how localized section types are passed to store actions
-- Enhanced practical examples section with new internationalization patterns
+- Updated Translation Key Organization section to document the new scrollSpeed key in the present section
+- Added new section documenting scroll control functionality with Speed label
+- Updated Practical Examples section with scroll speed control implementation
+- Enhanced troubleshooting guide with scroll speed related guidance
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -31,16 +32,17 @@
 4. [Architecture Overview](#architecture-overview)
 5. [Detailed Component Analysis](#detailed-component-analysis)
 6. [Action Enhancement](#action-enhancement)
-7. [Dependency Analysis](#dependency-analysis)
-8. [Performance Considerations](#performance-considerations)
-9. [Troubleshooting Guide](#troubleshooting-guide)
-10. [Conclusion](#conclusion)
-11. [Appendices](#appendices)
+7. [Scroll Control Functionality](#scroll-control-functionality)
+8. [Dependency Analysis](#dependency-analysis)
+9. [Performance Considerations](#performance-considerations)
+10. [Troubleshooting Guide](#troubleshooting-guide)
+11. [Conclusion](#conclusion)
+12. [Appendices](#appendices)
 
 ## Introduction
 This document explains LyricDeck's internationalization (i18n) system. It covers the language support structure (English and Traditional Chinese), translation key organization, dynamic language switching, locale persistence, and integration with the React component architecture. It also provides guidelines for adding new languages, managing translation keys, fallback behavior, pluralization handling, date/time formatting considerations, and best practices for multilingual desktop applications.
 
-**Updated** Enhanced with new internationalization capabilities for dynamic section labeling and proper display of section types in various languages.
+**Updated** Enhanced with new scroll control functionality featuring dynamic speed adjustment capabilities and proper internationalization support.
 
 ## Project Structure
 The i18n system is organized under a dedicated folder with a small runtime store and language packs. The store exposes a locale and a translation object, while components consume translations via hooks. Electron handles projection windows and IPC communication, which is relevant for how the interface behaves across windows.
@@ -51,33 +53,36 @@ subgraph "Renderer (React)"
 A["App.tsx"]
 B["SettingsPanel.tsx"]
 C["ProjectionView.tsx"]
-D["useI18n store<br/>src/i18n/index.ts"]
-E["Translations en.ts / zhTW.ts"]
-F["EditorPanel.tsx<br/>Dynamic Section Labeling"]
-G["SongLibrary.tsx<br/>Localized Default Labels"]
+D["PresentPanel.tsx<br/>Scroll Control"]
+E["useI18n store<br/>src/i18n/index.ts"]
+F["Translations en.ts / zhTW.ts<br/>+ scrollSpeed"]
+G["EditorPanel.tsx<br/>Dynamic Section Labeling"]
+H["SongLibrary.tsx<br/>Localized Default Labels"]
 end
 subgraph "Electron Main"
-H["electron/main.ts"]
-I["electron/preload.ts"]
+I["electron/main.ts"]
+J["electron/preload.ts"]
 end
 A --> D
 B --> D
-C --> I
+C --> J
 D --> E
-F --> D
-G --> D
-A --> H
-B --> H
-H --> I
+E --> F
+G --> E
+H --> E
+A --> I
+B --> I
+I --> J
 ```
 
 **Diagram sources**
 - [App.tsx:12-102](file://src/App.tsx#L12-L102)
 - [SettingsPanel.tsx:1-523](file://src/components/SettingsPanel.tsx#L1-L523)
 - [ProjectionView.tsx:1-134](file://src/components/ProjectionView.tsx#L1-L134)
+- [PresentPanel.tsx:1-395](file://src/components/PresentPanel.tsx#L1-L395)
 - [index.ts:1-43](file://src/i18n/index.ts#L1-L43)
-- [en.ts:1-180](file://src/i18n/en.ts#L1-L180)
-- [zhTW.ts:1-180](file://src/i18n/zhTW.ts#L1-L180)
+- [en.ts:1-181](file://src/i18n/en.ts#L1-L181)
+- [zhTW.ts:1-181](file://src/i18n/zhTW.ts#L1-L181)
 - [EditorPanel.tsx:106-107](file://src/components/EditorPanel.tsx#L106-L107)
 - [SongLibrary.tsx:88-91](file://src/components/SongLibrary.tsx#L88-L91)
 - [main.ts:1-390](file://electron/main.ts#L1-L390)
@@ -85,11 +90,12 @@ H --> I
 
 **Section sources**
 - [index.ts:1-43](file://src/i18n/index.ts#L1-L43)
-- [en.ts:1-180](file://src/i18n/en.ts#L1-L180)
-- [zhTW.ts:1-180](file://src/i18n/zhTW.ts#L1-L180)
+- [en.ts:1-181](file://src/i18n/en.ts#L1-L181)
+- [zhTW.ts:1-181](file://src/i18n/zhTW.ts#L1-L181)
 - [App.tsx:12-102](file://src/App.tsx#L12-L102)
 - [SettingsPanel.tsx:1-523](file://src/components/SettingsPanel.tsx#L1-L523)
 - [ProjectionView.tsx:1-134](file://src/components/ProjectionView.tsx#L1-L134)
+- [PresentPanel.tsx:1-395](file://src/components/PresentPanel.tsx#L1-L395)
 - [EditorPanel.tsx:106-107](file://src/components/EditorPanel.tsx#L106-L107)
 - [SongLibrary.tsx:88-91](file://src/components/SongLibrary.tsx#L88-L91)
 - [main.ts:1-390](file://electron/main.ts#L1-L390)
@@ -100,6 +106,7 @@ H --> I
 - Language packs: Two language packs define all translation keys grouped by functional areas (app, tabs, song library, editor, arrange, present, settings, background gallery, import/export, preparation list).
 - React integration: Components consume translations via the store hook and render localized strings. The Settings panel includes a language selector bound to the store.
 - Dynamic section labeling: Enhanced store actions support dynamic section type localization and custom default labels.
+- Scroll control functionality: New scroll speed control with internationalized labels for presentation mode.
 
 Key behaviors:
 - Locale type union defines supported locales.
@@ -107,13 +114,15 @@ Key behaviors:
 - Initial locale is loaded from local storage; defaults to English if missing or invalid.
 - Switching locale updates the translation object and persists the selection.
 - Enhanced actions support optional parameters for localized section types and custom labels.
+- Scroll speed control provides configurable timing for line shifting operations.
 
 **Section sources**
 - [index.ts:5-43](file://src/i18n/index.ts#L5-L43)
-- [en.ts:1-180](file://src/i18n/en.ts#L1-L180)
-- [zhTW.ts:1-180](file://src/i18n/zhTW.ts#L1-L180)
+- [en.ts:1-181](file://src/i18n/en.ts#L1-L181)
+- [zhTW.ts:1-181](file://src/i18n/zhTW.ts#L1-L181)
 - [SettingsPanel.tsx:419-447](file://src/components/SettingsPanel.tsx#L419-L447)
 - [appStore.ts:53-61](file://src/store/appStore.ts#L53-L61)
+- [PresentPanel.tsx:25-329](file://src/components/PresentPanel.tsx#L25-L329)
 
 ## Architecture Overview
 The i18n architecture is a thin, centralized store that exposes a translation object and locale state. Components depend on this store for all UI text. Electron's projection window uses a separate renderer that receives projection state via IPC; it does not render translated UI text, so i18n is not directly involved in projection rendering.
@@ -180,13 +189,13 @@ Translation keys are grouped by functional areas to keep the dictionary organize
 - Import/export messages and placeholders
 - Preparation list actions and counts
 
-**Updated** Section types now include localized names for all supported section types (Intro, Verse, Pre-Chorus, Chorus, Bridge, Instrumental, Outro, Custom).
+**Updated** Section types now include localized names for all supported section types (Intro, Verse, Pre-Chorus, Chorus, Bridge, Instrumental, Outro, Custom). The present section now includes scrollSpeed key for internationalized scroll control labels.
 
 This structure enables consistent key naming and simplifies maintenance across languages.
 
 **Section sources**
-- [en.ts:1-180](file://src/i18n/en.ts#L1-L180)
-- [zhTW.ts:1-180](file://src/i18n/zhTW.ts#L1-L180)
+- [en.ts:1-181](file://src/i18n/en.ts#L1-L181)
+- [zhTW.ts:1-181](file://src/i18n/zhTW.ts#L1-L181)
 
 ### Dynamic Language Switching Mechanism
 - Settings panel provides a language selector bound to the store's locale.
@@ -221,17 +230,20 @@ Settings-->>User : "UI re-renders in new language"
 - Projection view: Receives projection state via IPC; it renders content based on state, not translation keys.
 - Editor panel: Passes localized section type names to store actions for dynamic labeling.
 - Song library: Uses localized section types for default song creation.
+- Present panel: Uses translation keys for scroll control functionality including speed adjustments.
 
 ```mermaid
 graph LR
 Store["useI18n store"] --> App["App.tsx"]
 Store --> Settings["SettingsPanel.tsx"]
 Store --> Projection["ProjectionView.tsx"]
+Store --> Present["PresentPanel.tsx<br/>Scroll Control"]
 Store --> Editor["EditorPanel.tsx"]
 Store --> Library["SongLibrary.tsx"]
 App --> Tabs["Tabs and header"]
 Settings --> Form["Form labels and placeholders"]
 Projection --> State["Projection state from IPC"]
+Present --> Controls["Scroll Speed Controls"]
 Editor --> Actions["Localized Section Types"]
 Library --> DefaultLabels["Default Section Labels"]
 ```
@@ -240,6 +252,7 @@ Library --> DefaultLabels["Default Section Labels"]
 - [App.tsx:48-80](file://src/App.tsx#L48-L80)
 - [SettingsPanel.tsx:56-416](file://src/components/SettingsPanel.tsx#L56-L416)
 - [ProjectionView.tsx:22-29](file://src/components/ProjectionView.tsx#L22-L29)
+- [PresentPanel.tsx:320-329](file://src/components/PresentPanel.tsx#L320-L329)
 - [EditorPanel.tsx:106-107](file://src/components/EditorPanel.tsx#L106-L107)
 - [SongLibrary.tsx:88-91](file://src/components/SongLibrary.tsx#L88-L91)
 
@@ -247,6 +260,7 @@ Library --> DefaultLabels["Default Section Labels"]
 - [App.tsx:48-80](file://src/App.tsx#L48-L80)
 - [SettingsPanel.tsx:56-416](file://src/components/SettingsPanel.tsx#L56-L416)
 - [ProjectionView.tsx:22-29](file://src/components/ProjectionView.tsx#L22-L29)
+- [PresentPanel.tsx:320-329](file://src/components/PresentPanel.tsx#L320-L329)
 - [EditorPanel.tsx:106-107](file://src/components/EditorPanel.tsx#L106-L107)
 - [SongLibrary.tsx:88-91](file://src/components/SongLibrary.tsx#L88-L91)
 
@@ -295,12 +309,65 @@ When creating sections, the system follows this priority order:
 - [EditorPanel.tsx:106-107](file://src/components/EditorPanel.tsx#L106-L107)
 - [SongLibrary.tsx:88-91](file://src/components/SongLibrary.tsx#L88-L91)
 
+## Scroll Control Functionality
+
+**New** The present panel now includes comprehensive scroll control functionality with internationalized labels and dynamic speed adjustment capabilities.
+
+### Scroll Speed Control Implementation
+The scroll control system provides users with precise timing control for line shifting operations. The interface includes:
+
+- Speed label: Displays the localized label for scroll speed control
+- Numeric input: Allows users to set scroll duration in seconds with 0.1-second increments
+- Unit indicator: Shows "s" (seconds) for clarity
+- Line shift buttons: Enable moving up/down by 1-4 lines with configured speed
+- Real-time updates: Changes to scroll speed immediately affect subsequent operations
+
+### Translation Keys for Scroll Control
+Both English and Traditional Chinese translation files include the scrollSpeed key in the present section:
+
+**English translation:**
+```typescript
+scrollSpeed: 'Speed'
+```
+
+**Traditional Chinese translation:**
+```typescript
+scrollSpeed: '速度'
+```
+
+### Component Integration
+The scroll control functionality is integrated into the PresentPanel component through the following implementation:
+
+```typescript
+<div className="flex items-center gap-1">
+  <span className="text-xs text-surface-400 mr-1">{t.present.scrollSpeed}:</span>
+  <input
+    type="number"
+    min={0}
+    step={0.1}
+    value={scrollSpeed}
+    onChange={(e) => setScrollSpeed(Math.max(0, parseFloat(e.target.value) || 0))}
+    className="input w-16 text-xs py-1 px-2"
+  />
+  <span className="text-xs text-surface-400">s</span>
+</div>
+```
+
+The scroll speed value is then passed to shiftLines operations for precise timing control.
+
+**Section sources**
+- [en.ts:98](file://src/i18n/en.ts#L98)
+- [zhTW.ts:100](file://src/i18n/zhTW.ts#L100)
+- [PresentPanel.tsx:25](file://src/components/PresentPanel.tsx#L25)
+- [PresentPanel.tsx:320-329](file://src/components/PresentPanel.tsx#L320-L329)
+
 ## Dependency Analysis
 - Components depend on the i18n store for translations.
 - The store depends on language packs for translation values.
 - Electron main process manages projection windows and IPC; it does not depend on i18n.
 - The app store coordinates UI state and persistence; it now includes enhanced internationalization actions.
 - Components pass localized section types to store actions for dynamic labeling.
+- Present panel integrates scroll control functionality with internationalized labels.
 
 ```mermaid
 graph TB
@@ -309,23 +376,26 @@ Store --> ZhTW["zhTW.ts"]
 App["App.tsx"] --> Store
 Settings["SettingsPanel.tsx"] --> Store
 Projection["ProjectionView.tsx"] --> Preload["preload.ts"]
+Present["PresentPanel.tsx"] --> Store
 Preload --> MainProc["electron/main.ts"]
 Editor["EditorPanel.tsx"] --> AppStore["Enhanced App Store"]
 Library["SongLibrary.tsx"] --> AppStore
 AppStore --> Store
 App --> MainProc
 Settings --> MainProc
+Present --> MainProc
 Editor --> MainProc
 Library --> MainProc
 ```
 
 **Diagram sources**
 - [index.ts:1-43](file://src/i18n/index.ts#L1-L43)
-- [en.ts:1-180](file://src/i18n/en.ts#L1-L180)
-- [zhTW.ts:1-180](file://src/i18n/zhTW.ts#L1-L180)
+- [en.ts:1-181](file://src/i18n/en.ts#L1-L181)
+- [zhTW.ts:1-181](file://src/i18n/zhTW.ts#L1-L181)
 - [App.tsx:12-102](file://src/App.tsx#L12-L102)
 - [SettingsPanel.tsx:1-523](file://src/components/SettingsPanel.tsx#L1-L523)
 - [ProjectionView.tsx:1-134](file://src/components/ProjectionView.tsx#L1-L134)
+- [PresentPanel.tsx:1-395](file://src/components/PresentPanel.tsx#L1-L395)
 - [EditorPanel.tsx:106-107](file://src/components/EditorPanel.tsx#L106-L107)
 - [SongLibrary.tsx:88-91](file://src/components/SongLibrary.tsx#L88-L91)
 - [preload.ts:1-43](file://electron/preload.ts#L1-L43)
@@ -337,6 +407,7 @@ Library --> MainProc
 - [App.tsx:12-102](file://src/App.tsx#L12-L102)
 - [SettingsPanel.tsx:1-523](file://src/components/SettingsPanel.tsx#L1-L523)
 - [ProjectionView.tsx:1-134](file://src/components/ProjectionView.tsx#L1-L134)
+- [PresentPanel.tsx:1-395](file://src/components/PresentPanel.tsx#L1-L395)
 - [EditorPanel.tsx:106-107](file://src/components/EditorPanel.tsx#L106-L107)
 - [SongLibrary.tsx:88-91](file://src/components/SongLibrary.tsx#L88-L91)
 - [preload.ts:1-43](file://electron/preload.ts#L1-L43)
@@ -347,6 +418,7 @@ Library --> MainProc
 - Translation lookups are constant-time object property access; negligible overhead.
 - Switching locales updates the translation object and re-renders affected components; this is efficient and acceptable for desktop apps.
 - Enhanced store actions add minimal computational overhead for dynamic section labeling.
+- Scroll control functionality uses lightweight numeric inputs with minimal performance impact.
 - Avoid unnecessary re-renders by keeping translation usage scoped to components that need it.
 
 ## Troubleshooting Guide
@@ -357,6 +429,8 @@ Common issues and resolutions:
 - Projection window not reflecting language changes: This is expected; projection renderer does not use i18n.
 - **New** Dynamic section labeling not working: Ensure components pass localized section type names to the enhanced store actions.
 - **New** Default section labels incorrect: Verify that the localized section types exist in the translation files for the current locale.
+- **New** Scroll speed control not appearing: Verify that the scrollSpeed key exists in the present section of both translation files.
+- **New** Scroll speed values not updating: Check that the numeric input component properly handles value changes and passes values to shiftLines operations.
 
 **Section sources**
 - [index.ts:17-25](file://src/i18n/index.ts#L17-L25)
@@ -364,11 +438,12 @@ Common issues and resolutions:
 - [zhTW.ts:6-9](file://src/i18n/zhTW.ts#L6-L9)
 - [EditorPanel.tsx:106-107](file://src/components/EditorPanel.tsx#L106-L107)
 - [SongLibrary.tsx:88-91](file://src/components/SongLibrary.tsx#L88-L91)
+- [PresentPanel.tsx:320-329](file://src/components/PresentPanel.tsx#L320-L329)
 
 ## Conclusion
-LyricDeck's i18n system is straightforward and effective: a central store manages locale and translations, language packs organize keys by functional area, and components consume translations via hooks. Dynamic language switching is seamless and persistent. The recent enhancements add powerful internationalization capabilities for dynamic section labeling, allowing proper display of section types in various languages. Electron's projection window operates independently of i18n, focusing on rendering lyrics and backgrounds. Following the established patterns ensures consistency and scalability when adding new languages or keys.
+LyricDeck's i18n system is straightforward and effective: a central store manages locale and translations, language packs organize keys by functional area, and components consume translations via hooks. Dynamic language switching is seamless and persistent. The recent enhancements add powerful internationalization capabilities for dynamic section labeling, allowing proper display of section types in various languages. The new scroll control functionality provides users with precise timing control for line shifting operations, featuring comprehensive internationalization support. Electron's projection window operates independently of i18n, focusing on rendering lyrics and backgrounds. Following the established patterns ensures consistency and scalability when adding new languages or keys.
 
-**Updated** The enhanced internationalization system now provides seamless dynamic section labeling that respects user language preferences and maintains proper localization across all section types.
+**Updated** The enhanced internationalization system now provides seamless dynamic section labeling and sophisticated scroll control functionality that respects user language preferences and maintains proper localization across all features.
 
 ## Appendices
 
@@ -385,12 +460,13 @@ Guidelines:
 - Use distinct keys for pluralization and counts.
 - Avoid embedding dynamic values inside translation strings; pass values externally and compose messages.
 - **New** Ensure section types are properly localized for dynamic labeling functionality.
+- **New** Include scrollSpeed key in the present section for consistent scroll control internationalization.
 
 **Section sources**
 - [index.ts:5-15](file://src/i18n/index.ts#L5-L15)
 - [index.ts:27-42](file://src/i18n/index.ts#L27-L42)
-- [en.ts:1-180](file://src/i18n/en.ts#L1-L180)
-- [zhTW.ts:1-180](file://src/i18n/zhTW.ts#L1-L180)
+- [en.ts:1-181](file://src/i18n/en.ts#L1-L181)
+- [zhTW.ts:1-181](file://src/i18n/zhTW.ts#L1-L181)
 
 ### Managing Translation Keys
 - Group keys by functional areas to improve readability and maintenance.
@@ -398,17 +474,21 @@ Guidelines:
 - Separate singular and plural forms when needed (as shown in the English pack).
 - For dynamic values, pass parameters externally and format messages in components.
 - **New** Include comprehensive section types for all supported section types to enable dynamic labeling.
+- **New** Ensure scroll control functionality includes proper internationalization keys for consistent user experience.
 
 **Section sources**
 - [en.ts:4-7](file://src/i18n/en.ts#L4-L7)
 - [en.ts:169-176](file://src/i18n/en.ts#L169-L176)
 - [en.ts:52-62](file://src/i18n/en.ts#L52-L62)
+- [en.ts:98](file://src/i18n/en.ts#L98)
 - [zhTW.ts:54-64](file://src/i18n/zhTW.ts#L54-L64)
+- [zhTW.ts:100](file://src/i18n/zhTW.ts#L100)
 
 ### Fallback Mechanisms
 - If a key is missing in a language pack, accessing it yields undefined. Preferably provide fallbacks in components or ensure all keys are present in all packs.
 - The store initializes with English if the saved locale is invalid or missing.
 - **New** If localized section type names are not provided to enhanced actions, the system falls back to raw section type names.
+- **New** Scroll control functionality gracefully handles missing scrollSpeed keys with appropriate fallback behavior.
 
 **Section sources**
 - [index.ts:17-25](file://src/i18n/index.ts#L17-L25)
@@ -434,10 +514,27 @@ Guidelines:
 - Using translations in components:
   - Tabs and header labels: Access via the translation object and render in the App component.
   - Settings labels and placeholders: Use translation keys for form elements in the Settings panel.
+  - **New** Scroll control functionality: Use t.present.scrollSpeed for internationalized scroll speed labels in PresentPanel.
   - **New** Dynamic section labeling: Pass localized section types to store actions for proper internationalization.
 - Handling user language preferences:
   - Bind a select element to the store's locale setter.
   - Persist the selection to local storage for continuity across sessions.
+- **New** Implementing scroll speed control:
+  ```typescript
+  // In PresentPanel.tsx
+  <div className="flex items-center gap-1">
+    <span className="text-xs text-surface-400 mr-1">{t.present.scrollSpeed}:</span>
+    <input
+      type="number"
+      min={0}
+      step={0.1}
+      value={scrollSpeed}
+      onChange={(e) => setScrollSpeed(Math.max(0, parseFloat(e.target.value) || 0))}
+      className="input w-16 text-xs py-1 px-2"
+    />
+    <span className="text-xs text-surface-400">s</span>
+  </div>
+  ```
 - **New** Implementing localized section types:
   ```typescript
   // In EditorPanel.tsx
@@ -451,6 +548,7 @@ Guidelines:
 - [App.tsx:48-80](file://src/App.tsx#L48-L80)
 - [SettingsPanel.tsx:419-447](file://src/components/SettingsPanel.tsx#L419-L447)
 - [index.ts:35-42](file://src/i18n/index.ts#L35-L42)
+- [PresentPanel.tsx:320-329](file://src/components/PresentPanel.tsx#L320-L329)
 - [EditorPanel.tsx:106-107](file://src/components/EditorPanel.tsx#L106-L107)
 - [SongLibrary.tsx:88-91](file://src/components/SongLibrary.tsx#L88-L91)
 
@@ -463,3 +561,5 @@ Guidelines:
 - Consider accessibility: ensure translated text fits UI constraints and is readable in all languages.
 - **New** Leverage enhanced store actions for dynamic internationalization that respects user preferences.
 - **New** Ensure all supported section types are properly localized for consistent user experience across languages.
+- **New** Implement comprehensive scroll control functionality with proper internationalization for advanced user experiences.
+- **New** Test scroll speed control across different languages to ensure proper label display and user comprehension.
