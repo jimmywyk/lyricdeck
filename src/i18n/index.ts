@@ -1,23 +1,26 @@
 import { create } from 'zustand';
 import { en, type Translations } from './en';
 import { zhTW } from './zhTW';
+import { ja } from './ja';
 
-export type Locale = 'en' | 'zh-TW';
+export type Locale = 'en' | 'zh-TW' | 'ja';
 
 const locales: Record<Locale, Translations> = {
   en,
   'zh-TW': zhTW,
+  ja,
 };
 
 export const localeLabels: Record<Locale, string> = {
   en: 'English',
   'zh-TW': '繁體中文',
+  ja: '日本語',
 };
 
 function getSavedLocale(): Locale {
   try {
     const saved = localStorage.getItem('lyricdeck-locale');
-    if (saved && (saved === 'en' || saved === 'zh-TW')) {
+    if (saved && (saved === 'en' || saved === 'zh-TW' || saved === 'ja')) {
       return saved;
     }
   } catch {}
