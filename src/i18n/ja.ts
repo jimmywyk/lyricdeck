@@ -159,8 +159,11 @@ export const ja: Translations = {
     exportDescription: 'すべての曲、設定、背景画像をファイルにエクスポートします。',
     import: 'データをインポート',
     importDescription: 'ファイルから曲、設定、背景画像をインポートします。',
+    importUpsert: 'インポート（既存を更新）',
+    importUpsertDescription: 'データをインポートし、同じIDを持つ曲と画像を上書きします。新しい項目は追加されます。',
     exportSuccess: 'データのエクスポートが完了しました！',
     importSuccess: '{songs} 曲と {backgrounds} 枚の背景画像をインポートしました。',
+    importUpsertSuccess: '{added} 曲を追加、{updated} 曲を更新。背景画像：{bgAdded} 枚追加、{bgUpdated} 枚更新。',
     importFailed: 'インポートに失敗しました。ファイルが無効または破損している可能性があります。',
     exporting: 'エクスポート中...',
     importing: 'インポート中...',
@@ -177,5 +180,19 @@ export const ja: Translations = {
     alreadyInList: 'すでにセットリストに追加済み',
     removeFromList: 'リストから削除',
     songCount: '{count} 曲',
+  },
+
+  // Purge Data
+  purgeData: {
+    title: 'データを消去',
+    purgeAll: 'すべてのデータを消去',
+    purgeAllDescription: 'すべての曲、設定、背景画像を削除します。この操作は取り消せません。',
+    purgeSongs: '曲のみ消去',
+    purgeSongsDescription: 'すべての曲のみを削除します。設定と背景画像は保持されます。',
+    confirmPurgeAll: 'すべての曲、設定、背景画像を完全に削除します。この操作は取り消せません。よろしいですか？',
+    confirmPurgeSongs: 'すべての曲を完全に削除します。設定と背景画像は保持されます。よろしいですか？',
+    purgeAllSuccess: 'すべてのデータが消去されました。',
+    purgeSongsSuccess: 'すべての曲が消去されました。',
+    purging: '消去中...',
   },
 };

@@ -4,15 +4,16 @@ import { useI18n } from '../i18n';
 interface BackgroundGalleryProps {
   currentValue?: string;
   onSelect: (imagePath: string) => void;
+  refreshKey?: number;
 }
 
-export function BackgroundGallery({ currentValue, onSelect }: BackgroundGalleryProps) {
+export function BackgroundGallery({ currentValue, onSelect, refreshKey }: BackgroundGalleryProps) {
   const { t } = useI18n();
   const [images, setImages] = useState<string[]>([]);
 
   useEffect(() => {
     loadImages();
-  }, []);
+  }, [refreshKey]);
 
   async function loadImages() {
     if (window.electronAPI) {

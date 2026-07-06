@@ -157,8 +157,11 @@ export const en = {
     exportDescription: 'Export all songs, settings, and background images to a file.',
     import: 'Import Data',
     importDescription: 'Import songs, settings, and background images from a file.',
+    importUpsert: 'Import (Update Existing)',
+    importUpsertDescription: 'Import data and replace existing songs and images with matching IDs. New items will be added.',
     exportSuccess: 'Data exported successfully!',
     importSuccess: 'Imported {songs} songs and {backgrounds} background images.',
+    importUpsertSuccess: 'Added {added} songs, updated {updated} songs. Backgrounds: {bgAdded} added, {bgUpdated} updated.',
     importFailed: 'Import failed. The file may be invalid or corrupted.',
     exporting: 'Exporting...',
     importing: 'Importing...',
@@ -175,6 +178,20 @@ export const en = {
     alreadyInList: 'Already in preparation list',
     removeFromList: 'Remove from list',
     songCount: '{count} songs',
+  },
+
+  // Purge Data
+  purgeData: {
+    title: 'Purge Data',
+    purgeAll: 'Purge All Data',
+    purgeAllDescription: 'Delete all songs, settings, and background images. This cannot be undone.',
+    purgeSongs: 'Purge Songs Only',
+    purgeSongsDescription: 'Delete all songs only. Settings and background images will be preserved.',
+    confirmPurgeAll: 'This will permanently delete ALL songs, settings, and background images. This action cannot be undone. Are you sure?',
+    confirmPurgeSongs: 'This will permanently delete ALL songs. Settings and background images will be preserved. Are you sure?',
+    purgeAllSuccess: 'All data has been purged.',
+    purgeSongsSuccess: 'All songs have been purged.',
+    purging: 'Purging...',
   },
 };
 

@@ -5,9 +5,15 @@ import { BackgroundGallery } from './BackgroundGallery';
 import type { BackgroundSettings, TextStyle } from '../types';
 
 export function SettingsPanel() {
-  const { songs, selectedSongId, updateSong, loadFromDisk } = useAppStore();
+  const { songs, selectedSongId, updateSong, loadFromDisk, resetState, setSongs, selectSong } = useAppStore();
   const { t, locale, setLocale } = useI18n();
+  const [galleryRefreshKey, setGalleryRefreshKey] = useState(0);
   const song = songs.find((s) => s.id === selectedSongId);
+
+  function handleImportSuccess() {
+    setGalleryRefreshKey((k) => k + 1);
+    loadFromDisk();
+  }
 
   if (!song) {
     return (
@@ -15,7 +21,16 @@ export function SettingsPanel() {
         {/* Language setting is always visible */}
         <LanguageSection t={t} locale={locale} setLocale={setLocale} />
         {/* Import/Export always visible */}
-        <ImportExportSection t={t} onImportSuccess={loadFromDisk} />
+        <ImportExportSection t={t} onImportSuccess={handleImportSuccess} />
+        {/* Purge Data always visible */}
+        <PurgeDataSection
+          t={t}
+          onPurgeAll={resetState}
+          onPurgeSongs={() => {
+            setSongs([]);
+            selectSong(null);
+          }}
+        />
         <div className="flex items-center justify-center h-48 text-surface-400">
           <p>{t.settings.selectSong}</p>
         </div>
@@ -64,7 +79,17 @@ export function SettingsPanel() {
       <LanguageSection t={t} locale={locale} setLocale={setLocale} />
 
       {/* Import / Export */}
-      <ImportExportSection t={t} onImportSuccess={loadFromDisk} />
+      <ImportExportSection t={t} onImportSuccess={handleImportSuccess} />
+
+      {/* Purge Data */}
+      <PurgeDataSection
+        t={t}
+        onPurgeAll={resetState}
+        onPurgeSongs={() => {
+          setSongs([]);
+          selectSong(null);
+        }}
+      />
 
       {/* Background Settings */}
       <section className="panel p-4 space-y-4">
@@ -182,6 +207,7 @@ export function SettingsPanel() {
             <BackgroundGallery
               currentValue={presentation.background.value}
               onSelect={(imagePath) => updateBackground({ type: 'image', value: imagePath })}
+              refreshKey={galleryRefreshKey}
             />
           </div>
         )}
@@ -485,6 +511,29 @@ function ImportExportSection({ t, onImportSuccess }: { t: any; onImportSuccess: 
     }
   }
 
+  async function handleImportUpsert() {
+    if (!window.electronAPI) return;
+    setBusy(true);
+    setStatus(null);
+    try {
+      const result = await window.electronAPI.importDataUpsert();
+      if (result.success) {
+        setStatus(
+          t.importExport.importUpsertSuccess
+            .replace('{added}', String(result.importedSongs || 0))
+            .replace('{updated}', String(result.updatedSongs || 0))
+            .replace('{bgAdded}', String(result.importedBackgrounds || 0))
+            .replace('{bgUpdated}', String(result.updatedBackgrounds || 0))
+        );
+        onImportSuccess();
+      } else if (result.error) {
+        setStatus(t.importExport.importFailed);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <section className="panel p-4 space-y-3">
       <h3 className="text-sm font-medium text-surface-200">{t.importExport.title}</h3>
@@ -511,6 +560,98 @@ function ImportExportSection({ t, onImportSuccess }: { t: any; onImportSuccess: 
             className="btn btn-secondary text-sm whitespace-nowrap"
           >
             {busy ? t.importExport.importing : t.importExport.import}
+          </button>
+        </div>
+        <div className="flex items-start gap-4">
+          <div className="flex-1">
+            <p className="text-xs text-surface-400">{t.importExport.importUpsertDescription}</p>
+          </div>
+          <button
+            onClick={handleImportUpsert}
+            disabled={busy}
+            className="btn btn-secondary text-sm whitespace-nowrap"
+          >
+            {busy ? t.importExport.importing : t.importExport.importUpsert}
+          </button>
+        </div>
+        {status && (
+          <p className="text-xs text-primary-400 mt-2">{status}</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function PurgeDataSection({
+  t,
+  onPurgeAll,
+  onPurgeSongs,
+}: {
+  t: any;
+  onPurgeAll: () => void;
+  onPurgeSongs: () => void;
+}) {
+  const [status, setStatus] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function handlePurgeAll() {
+    if (!window.electronAPI) return;
+    const confirmed = window.confirm(t.purgeData.confirmPurgeAll);
+    if (!confirmed) return;
+
+    setBusy(true);
+    setStatus(null);
+    try {
+      await window.electronAPI.purgeAllData();
+      onPurgeAll();
+      setStatus(t.purgeData.purgeAllSuccess);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handlePurgeSongs() {
+    if (!window.electronAPI) return;
+    const confirmed = window.confirm(t.purgeData.confirmPurgeSongs);
+    if (!confirmed) return;
+
+    setBusy(true);
+    setStatus(null);
+    try {
+      await window.electronAPI.purgeSongsOnly();
+      onPurgeSongs();
+      setStatus(t.purgeData.purgeSongsSuccess);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="panel p-4 space-y-3">
+      <h3 className="text-sm font-medium text-surface-200">{t.purgeData.title}</h3>
+      <div className="space-y-3">
+        <div className="flex items-start gap-4">
+          <div className="flex-1">
+            <p className="text-xs text-surface-400">{t.purgeData.purgeAllDescription}</p>
+          </div>
+          <button
+            onClick={handlePurgeAll}
+            disabled={busy}
+            className="btn btn-secondary text-sm whitespace-nowrap text-red-400 border-red-400 hover:bg-red-400 hover:text-white"
+          >
+            {busy ? t.purgeData.purging : t.purgeData.purgeAll}
+          </button>
+        </div>
+        <div className="flex items-start gap-4">
+          <div className="flex-1">
+            <p className="text-xs text-surface-400">{t.purgeData.purgeSongsDescription}</p>
+          </div>
+          <button
+            onClick={handlePurgeSongs}
+            disabled={busy}
+            className="btn btn-secondary text-sm whitespace-nowrap text-amber-400 border-amber-400 hover:bg-amber-400 hover:text-white"
+          >
+            {busy ? t.purgeData.purging : t.purgeData.purgeSongs}
           </button>
         </div>
         {status && (

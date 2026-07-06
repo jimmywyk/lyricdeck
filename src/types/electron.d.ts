@@ -27,6 +27,9 @@ declare global {
       deleteBackgroundImage: (imagePath: string) => Promise<boolean>;
       exportData: () => Promise<boolean>;
       importData: () => Promise<{ success: boolean; importedSongs?: number; importedBackgrounds?: number; error?: string }>;
+      importDataUpsert: () => Promise<{ success: boolean; importedSongs?: number; updatedSongs?: number; importedBackgrounds?: number; updatedBackgrounds?: number; error?: string }>;
+      purgeAllData: () => Promise<boolean>;
+      purgeSongsOnly: () => Promise<boolean>;
     };
   }
 }

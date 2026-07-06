@@ -175,6 +175,35 @@ export function importImage(
   persistDb();
 }
 
+export function upsertImage(
+  id: string,
+  filename: string,
+  mimeType: string,
+  data: Buffer,
+  source: string
+): { isNew: boolean } {
+  const database = getDb();
+  // Check if image already exists
+  const existing = database.exec('SELECT id FROM images WHERE id = ?', [id]);
+  const isNew = !(existing.length > 0 && existing[0].values.length > 0);
+
+  if (isNew) {
+    const createdAt = new Date().toISOString();
+    database.run(
+      'INSERT INTO images (id, filename, mime_type, data, source, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+      [id, filename, mimeType, new Uint8Array(data), source, createdAt]
+    );
+  } else {
+    // Update existing image in-place (preserves created_at ordering)
+    database.run(
+      'UPDATE images SET filename = ?, mime_type = ?, data = ?, source = ? WHERE id = ?',
+      [filename, mimeType, new Uint8Array(data), source, id]
+    );
+  }
+  persistDb();
+  return { isNew };
+}
+
 export function getMeta(key: string): string | null {
   const database = getDb();
   const stmt = database.prepare('SELECT value FROM meta WHERE key = ?');
@@ -208,6 +237,13 @@ function getMimeType(ext: string): string {
     '.bmp': 'image/bmp',
   };
   return mimeMap[ext.toLowerCase()] || 'application/octet-stream';
+}
+
+export function purgeAllImages(): void {
+  const database = getDb();
+  database.run('DELETE FROM images');
+  database.run('DELETE FROM meta');
+  persistDb();
 }
 
 export { getMimeType };

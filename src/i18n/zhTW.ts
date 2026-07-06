@@ -159,8 +159,11 @@ export const zhTW: Translations = {
     exportDescription: '將所有歌曲、設定和背景圖片匯出為檔案。',
     import: '匯入資料',
     importDescription: '從檔案匯入歌曲、設定和背景圖片。',
+    importUpsert: '匯入（更新現有）',
+    importUpsertDescription: '匯入資料並取代具有相同 ID 的歌曲和圖片。新項目將被新增。',
     exportSuccess: '資料匯出成功！',
     importSuccess: '已匯入 {songs} 首歌曲和 {backgrounds} 張背景圖片。',
+    importUpsertSuccess: '新增 {added} 首歌曲，更新 {updated} 首歌曲。背景圖片：新增 {bgAdded} 張，更新 {bgUpdated} 張。',
     importFailed: '匯入失敗。檔案可能無效或已損壞。',
     exporting: '匯出中...',
     importing: '匯入中...',
@@ -177,5 +180,19 @@ export const zhTW: Translations = {
     alreadyInList: '已在預備清單中',
     removeFromList: '從清單中移除',
     songCount: '{count} 首歌曲',
+  },
+
+  // Purge Data
+  purgeData: {
+    title: '清除資料',
+    purgeAll: '清除所有資料',
+    purgeAllDescription: '刪除所有歌曲、設定和背景圖片。此操作無法復原。',
+    purgeSongs: '僅清除歌曲',
+    purgeSongsDescription: '僅刪除所有歌曲。設定和背景圖片將被保留。',
+    confirmPurgeAll: '這將永久刪除所有歌曲、設定和背景圖片。此操作無法復原。確定要繼續嗎？',
+    confirmPurgeSongs: '這將永久刪除所有歌曲。設定和背景圖片將被保留。確定要繼續嗎？',
+    purgeAllSuccess: '所有資料已清除。',
+    purgeSongsSuccess: '所有歌曲已清除。',
+    purging: '清除中...',
   },
 };

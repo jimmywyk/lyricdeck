@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, screen, dialog, protocol } from 'electron';
 import path from 'path';
 import fs from 'fs';
-import { initDatabase, insertImage, getImage, listGalleryImages, deleteImage, getAllImagesForExport, importImage, getMimeType } from './db';
+import { initDatabase, insertImage, getImage, listGalleryImages, deleteImage, getAllImagesForExport, importImage, upsertImage, getMimeType, purgeAllImages } from './db';
 import { runMigration } from './migrate';
 
 let mainWindow: BrowserWindow | null = null;
@@ -351,6 +351,100 @@ ipcMain.handle('import-data', async () => {
   } catch {
     return { success: false, error: 'parse_error' };
   }
+});
+
+ipcMain.handle('import-data-upsert', async () => {
+  const result = await dialog.showOpenDialog(mainWindow!, {
+    title: 'Import LyricDeck Data (Update Existing)',
+    properties: ['openFile'],
+    filters: [{ name: 'LyricDeck Export', extensions: ['lyricdeck'] }],
+  });
+  if (result.canceled || result.filePaths.length === 0) return { success: false };
+
+  try {
+    const raw = fs.readFileSync(result.filePaths[0], 'utf-8');
+    const importData = JSON.parse(raw);
+
+    if (!importData.version || !importData.songs) {
+      return { success: false, error: 'invalid_format' };
+    }
+
+    // Upsert songs: replace existing by id, add new ones
+    const existingSongs = loadSongs();
+    const existingIds = new Map<string, number>();
+    existingSongs.forEach((s: any, idx: number) => existingIds.set(s.id, idx));
+    let addedCount = 0;
+    let updatedCount = 0;
+    for (const song of importData.songs) {
+      const existingIdx = existingIds.get(song.id);
+      if (existingIdx !== undefined) {
+        existingSongs[existingIdx] = song;
+        updatedCount++;
+      } else {
+        existingSongs.push(song);
+        addedCount++;
+      }
+    }
+    saveSongs(existingSongs);
+
+    // Import settings (overwrite if provided)
+    if (importData.settings) {
+      saveSettings(importData.settings);
+    }
+
+    // Import preparation list (overwrite if provided)
+    if (importData.preparationList) {
+      savePreparationList(importData.preparationList);
+    }
+
+    // Upsert images: replace existing by id, add new ones
+    let bgAdded = 0;
+    let bgUpdated = 0;
+    if (importData.version >= 2 && importData.images) {
+      for (const img of importData.images) {
+        const data = Buffer.from(img.data, 'base64');
+        const result = upsertImage(img.id, img.filename, img.mime_type, data, img.source);
+        if (result.isNew) bgAdded++;
+        else bgUpdated++;
+      }
+    } else if (importData.backgroundImages) {
+      // v1 format: always insert new (no ID to deduplicate)
+      for (const [fileName, base64Data] of Object.entries(importData.backgroundImages)) {
+        const data = Buffer.from(base64Data as string, 'base64');
+        const ext = path.extname(fileName).toLowerCase();
+        const mimeType = getMimeType(ext);
+        insertImage(data, fileName, mimeType, 'gallery');
+        bgAdded++;
+      }
+    }
+
+    return { success: true, importedSongs: addedCount, updatedSongs: updatedCount, importedBackgrounds: bgAdded, updatedBackgrounds: bgUpdated };
+  } catch {
+    return { success: false, error: 'parse_error' };
+  }
+});
+
+// Purge data handlers
+ipcMain.handle('purge-all-data', () => {
+  // Delete all data files
+  const songsPath = getSongsFilePath();
+  const settingsPath = getSettingsFilePath();
+  const prepListPath = getPreparationListFilePath();
+
+  if (fs.existsSync(songsPath)) fs.unlinkSync(songsPath);
+  if (fs.existsSync(settingsPath)) fs.unlinkSync(settingsPath);
+  if (fs.existsSync(prepListPath)) fs.unlinkSync(prepListPath);
+
+  // Purge all images and meta from SQLite
+  purgeAllImages();
+
+  return true;
+});
+
+ipcMain.handle('purge-songs-only', () => {
+  const songsPath = getSongsFilePath();
+  if (fs.existsSync(songsPath)) fs.unlinkSync(songsPath);
+  return true;
 });
 
 app.whenReady().then(async () => {

@@ -95,6 +95,9 @@ interface AppStore {
   // Actions - Persistence
   loadFromDisk: () => Promise<void>;
   saveToDisk: () => Promise<void>;
+
+  // Actions - Reset
+  resetState: () => void;
 }
 
 export const useAppStore = create<AppStore>((set, get) => ({
@@ -403,5 +406,19 @@ export const useAppStore = create<AppStore>((set, get) => ({
     if (window.electronAPI) {
       await window.electronAPI.saveSongs(get().songs);
     }
+  },
+
+  // Reset state
+  resetState: () => {
+    set({
+      songs: [],
+      selectedSongId: null,
+      searchQuery: '',
+      projectionState: defaultProjectionState,
+      currentArrangementIndex: -1,
+      autoFontSizeValue: null,
+      settings: { defaultBackground, defaultTextStyle },
+      preparationList: [],
+    });
   },
 }));

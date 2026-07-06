@@ -39,4 +39,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Import / Export
   exportData: () => ipcRenderer.invoke('export-data'),
   importData: () => ipcRenderer.invoke('import-data'),
+  importDataUpsert: () => ipcRenderer.invoke('import-data-upsert'),
+
+  // Purge data
+  purgeAllData: () => ipcRenderer.invoke('purge-all-data'),
+  purgeSongsOnly: () => ipcRenderer.invoke('purge-songs-only'),
 });
