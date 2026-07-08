@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ProjectionState } from '../types';
+import { safeBackgroundStyle, sanitizeNumber } from '../utils/sanitize';
 
 export function ProjectionView() {
   const [state, setState] = useState<ProjectionState>({
@@ -29,22 +30,7 @@ export function ProjectionView() {
   }, []);
 
   const getBackgroundStyle = (): React.CSSProperties => {
-    const bg = state.background;
-    switch (bg.type) {
-      case 'color':
-        return { backgroundColor: bg.value || '#000000' };
-      case 'gradient':
-        return { background: bg.value || 'linear-gradient(135deg, #1a1a2e, #16213e)' };
-      case 'image':
-        return {
-          backgroundImage: `url("${bg.value}")`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          filter: bg.blur ? `blur(${bg.blur}px)` : undefined,
-        };
-      default:
-        return { backgroundColor: '#000000' };
-    }
+    return safeBackgroundStyle(state.background);
   };
 
   const getTextStyle = (): React.CSSProperties => {
@@ -86,8 +72,11 @@ export function ProjectionView() {
     );
   }
 
-  const overlay = state.background.overlayOpacity
-    ? `rgba(0,0,0,${state.background.overlayOpacity})`
+  const overlayOpacity = state.background.overlayOpacity
+    ? sanitizeNumber(state.background.overlayOpacity, 0, 1, 0)
+    : 0;
+  const overlay = overlayOpacity > 0
+    ? `rgba(0,0,0,${overlayOpacity})`
     : undefined;
 
   return (

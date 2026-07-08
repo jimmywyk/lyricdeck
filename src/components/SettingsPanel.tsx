@@ -3,6 +3,7 @@ import { useAppStore } from '../store/appStore';
 import { useI18n, localeLabels, type Locale } from '../i18n';
 import { BackgroundGallery } from './BackgroundGallery';
 import type { BackgroundSettings, TextStyle } from '../types';
+import { sanitizeImageUrl, sanitizeNumber } from '../utils/sanitize';
 
 export function SettingsPanel() {
   const { songs, selectedSongId, updateSong, loadFromDisk, resetState, setSongs, selectSong } = useAppStore();
@@ -164,13 +165,13 @@ export function SettingsPanel() {
               <div className="space-y-2">
                 <div
                   className="w-full h-40 rounded-lg bg-cover bg-center border border-surface-600 relative overflow-hidden"
-                  style={{ backgroundImage: `url("${presentation.background.value}")` }}
+                  style={sanitizeImageUrl(presentation.background.value) ? { backgroundImage: `url("${sanitizeImageUrl(presentation.background.value)}")` } : {}}
                 >
                   {/* Overlay preview */}
                   {(presentation.background.overlayOpacity || 0) > 0 && (
                     <div
                       className="absolute inset-0"
-                      style={{ backgroundColor: `rgba(0,0,0,${presentation.background.overlayOpacity || 0})` }}
+                      style={{ backgroundColor: `rgba(0,0,0,${sanitizeNumber(presentation.background.overlayOpacity, 0, 1, 0)})` }}
                     />
                   )}
                   {/* Sample text preview */}

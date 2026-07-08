@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAppStore } from '../store/appStore';
 import { useI18n } from '../i18n';
 import { PreparationList } from './PreparationList';
+import { safeBackgroundStyle } from '../utils/sanitize';
 
 function calculateOptimalFontSize(
   lyrics: string,
@@ -453,18 +454,5 @@ export function PresentPanel() {
 }
 
 function getPreviewBgStyle(bg: any): React.CSSProperties {
-  switch (bg.type) {
-    case 'color':
-      return { backgroundColor: bg.value || '#000000' };
-    case 'gradient':
-      return { background: bg.value || 'linear-gradient(135deg, #1a1a2e, #16213e)' };
-    case 'image':
-      return {
-        backgroundImage: `url("${bg.value}")`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      };
-    default:
-      return { backgroundColor: '#000000' };
-  }
+  return safeBackgroundStyle(bg);
 }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAppStore } from '../store/appStore';
 import { useI18n } from '../i18n';
 import type { SectionType } from '../types';
+import { safeBackgroundStyle } from '../utils/sanitize';
 
 const SECTION_TYPES: SectionType[] = [
   'Intro',
@@ -246,18 +247,5 @@ function SlidePreview({ song }: { song: any }) {
 }
 
 function getBackgroundStyle(bg: any): React.CSSProperties {
-  switch (bg.type) {
-    case 'color':
-      return { backgroundColor: bg.value || '#000000' };
-    case 'gradient':
-      return { background: bg.value || 'linear-gradient(135deg, #1a1a2e, #16213e)' };
-    case 'image':
-      return {
-        backgroundImage: `url("${bg.value}")`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      };
-    default:
-      return { backgroundColor: '#000000' };
-  }
+  return safeBackgroundStyle(bg);
 }

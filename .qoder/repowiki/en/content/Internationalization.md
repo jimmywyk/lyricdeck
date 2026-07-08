@@ -6,27 +6,19 @@
 - [en.ts](file://src/i18n/en.ts)
 - [zhTW.ts](file://src/i18n/zhTW.ts)
 - [ja.ts](file://src/i18n/ja.ts)
-- [App.tsx](file://src/App.tsx)
 - [SettingsPanel.tsx](file://src/components/SettingsPanel.tsx)
-- [ProjectionView.tsx](file://src/components/ProjectionView.tsx)
-- [PresentPanel.tsx](file://src/components/PresentPanel.tsx)
-- [appStore.ts](file://src/store/appStore.ts)
-- [EditorPanel.tsx](file://src/components/EditorPanel.tsx)
-- [SongLibrary.tsx](file://src/components/SongLibrary.tsx)
-- [main.tsx](file://src/main.tsx)
 - [main.ts](file://electron/main.ts)
 - [preload.ts](file://electron/preload.ts)
-- [index.ts](file://src/types/index.ts)
 </cite>
 
 ## Update Summary
 **Changes Made**
-- Updated Language Support Structure section to document comprehensive Japanese language support
-- Added new section documenting Japanese language implementation with complete translation coverage
-- Enhanced Translation Key Organization section to include Japanese-specific keys
-- Updated Practical Examples section with Japanese language integration examples
-- Added Japanese language support to troubleshooting guide
-- Updated Adding a New Language section with Japanese implementation patterns
+- Updated translation key documentation to reflect complete coverage of upsert import functionality across all supported languages
+- Enhanced purge data vocabulary documentation with comprehensive localization details
+- Added detailed status message translation system documentation with parameter substitution examples
+- Expanded import/export section to cover both standard and upsert import operations with full internationalization
+- Updated component integration examples to show proper usage of new translation keys
+- Enhanced backend implementation documentation for IPC handlers supporting internationalized operations
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -36,19 +28,22 @@
 5. [Language Support Structure](#language-support-structure)
 6. [Detailed Component Analysis](#detailed-component-analysis)
 7. [Japanese Language Implementation](#japanese-language-implementation)
-8. [Action Enhancement](#action-enhancement)
-9. [Scroll Control Functionality](#scroll-control-functionality)
-10. [Auto Font Size Feature](#auto-font-size-feature)
-11. [Dependency Analysis](#dependency-analysis)
-12. [Performance Considerations](#performance-considerations)
-13. [Troubleshooting Guide](#troubleshooting-guide)
-14. [Conclusion](#conclusion)
-15. [Appendices](#appendices)
+8. [Import/Export Functionality](#importexport-functionality)
+9. [Data Management Operations](#data-management-operations)
+10. [Status Message System](#status-message-system)
+11. [Action Enhancement](#action-enhancement)
+12. [Scroll Control Functionality](#scroll-control-functionality)
+13. [Auto Font Size Feature](#auto-font-size-feature)
+14. [Dependency Analysis](#dependency-analysis)
+15. [Performance Considerations](#performance-considerations)
+16. [Troubleshooting Guide](#troubleshooting-guide)
+17. [Conclusion](#conclusion)
+18. [Appendices](#appendices)
 
 ## Introduction
 This document explains LyricDeck's internationalization (i18n) system. It covers the language support structure (English, Traditional Chinese, and Japanese), translation key organization, dynamic language switching, locale persistence, and integration with the React component architecture. It also provides guidelines for adding new languages, managing translation keys, fallback behavior, pluralization handling, date/time formatting considerations, and best practices for multilingual desktop applications.
 
-**Updated** Enhanced with comprehensive Japanese language support that provides complete translation coverage for all major application features including editor, arrange, present, settings, song library, background gallery, import/export, and preparation list functionality.
+The system provides comprehensive internationalization support for advanced data management operations including upsert import functionality, purge data vocabulary, and sophisticated status message translations across all supported languages. The i18n architecture ensures consistent user experience across English, Traditional Chinese, and Japanese implementations while maintaining proper localization for complex data operations.
 
 ## Project Structure
 The i18n system is organized under a dedicated folder with a small runtime store and language packs. The store exposes a locale and a translation object, while components consume translations via hooks. Electron handles projection windows and IPC communication, which is relevant for how the interface behaves across windows.
@@ -57,7 +52,7 @@ The i18n system is organized under a dedicated folder with a small runtime store
 graph TB
 subgraph "Renderer (React)"
 A["App.tsx"]
-B["SettingsPanel.tsx"]
+B["SettingsPanel.tsx<br/>Import/Export & Data Management"]
 C["ProjectionView.tsx"]
 D["PresentPanel.tsx<br/>Scroll Control & Auto Font Size"]
 E["useI18n store<br/>src/i18n/index.ts"]
@@ -66,8 +61,8 @@ G["EditorPanel.tsx<br/>Dynamic Section Labeling"]
 H["SongLibrary.tsx<br/>Localized Default Labels"]
 end
 subgraph "Electron Main"
-I["electron/main.ts"]
-J["electron/preload.ts"]
+I["electron/main.ts<br/>Upsert Import & Purge Operations"]
+J["electron/preload.ts<br/>IPC Bridge"]
 end
 A --> D
 B --> D
@@ -82,40 +77,31 @@ I --> J
 ```
 
 **Diagram sources**
-- [App.tsx:12-102](file://src/App.tsx#L12-L102)
-- [SettingsPanel.tsx:1-523](file://src/components/SettingsPanel.tsx#L1-L523)
-- [ProjectionView.tsx:1-134](file://src/components/ProjectionView.tsx#L1-L134)
-- [PresentPanel.tsx:1-401](file://src/components/PresentPanel.tsx#L1-L401)
 - [index.ts:1-46](file://src/i18n/index.ts#L1-L46)
-- [en.ts:1-182](file://src/i18n/en.ts#L1-L182)
-- [zhTW.ts:1-182](file://src/i18n/zhTW.ts#L1-L182)
-- [ja.ts:1-182](file://src/i18n/ja.ts#L1-L182)
-- [EditorPanel.tsx:106-107](file://src/components/EditorPanel.tsx#L106-L107)
-- [SongLibrary.tsx:88-91](file://src/components/SongLibrary.tsx#L88-L91)
-- [main.ts:1-390](file://electron/main.ts#L1-L390)
-- [preload.ts:1-43](file://electron/preload.ts#L1-L43)
+- [en.ts:1-199](file://src/i18n/en.ts#L1-L199)
+- [zhTW.ts:1-199](file://src/i18n/zhTW.ts#L1-L199)
+- [ja.ts:1-199](file://src/i18n/ja.ts#L1-L199)
+- [SettingsPanel.tsx:1-664](file://src/components/SettingsPanel.tsx#L1-L664)
+- [main.ts:1-484](file://electron/main.ts#L1-L484)
+- [preload.ts:1-48](file://electron/preload.ts#L1-L48)
 
 **Section sources**
 - [index.ts:1-46](file://src/i18n/index.ts#L1-L46)
-- [en.ts:1-182](file://src/i18n/en.ts#L1-L182)
-- [zhTW.ts:1-182](file://src/i18n/zhTW.ts#L1-L182)
-- [ja.ts:1-182](file://src/i18n/ja.ts#L1-L182)
-- [App.tsx:12-102](file://src/App.tsx#L12-L102)
-- [SettingsPanel.tsx:1-523](file://src/components/SettingsPanel.tsx#L1-L523)
-- [ProjectionView.tsx:1-134](file://src/components/ProjectionView.tsx#L1-L134)
-- [PresentPanel.tsx:1-401](file://src/components/PresentPanel.tsx#L1-L401)
-- [EditorPanel.tsx:106-107](file://src/components/EditorPanel.tsx#L106-L107)
-- [SongLibrary.tsx:88-91](file://src/components/SongLibrary.tsx#L88-L91)
-- [main.ts:1-390](file://electron/main.ts#L1-L390)
-- [preload.ts:1-43](file://electron/preload.ts#L1-L43)
+- [en.ts:1-199](file://src/i18n/en.ts#L1-L199)
+- [zhTW.ts:1-199](file://src/i18n/zhTW.ts#L1-L199)
+- [ja.ts:1-199](file://src/i18n/ja.ts#L1-L199)
+- [SettingsPanel.tsx:1-664](file://src/components/SettingsPanel.tsx#L1-L664)
+- [main.ts:1-484](file://electron/main.ts#L1-L484)
+- [preload.ts:1-48](file://electron/preload.ts#L1-L48)
 
 ## Core Components
 - Translation store: Provides locale, translation object, and setter for dynamic language switching. It persists the user's language preference in local storage and initializes from persisted state.
-- Language packs: Three language packs define all translation keys grouped by functional areas (app, tabs, song library, editor, arrange, present, settings, background gallery, import/export, preparation list).
+- Language packs: Three language packs define all translation keys grouped by functional areas (app, tabs, song library, editor, arrange, present, settings, background gallery, import/export, preparation list, purge data).
 - React integration: Components consume translations via the store hook and render localized strings. The Settings panel includes a language selector bound to the store.
 - Dynamic section labeling: Enhanced store actions support dynamic section type localization and custom default labels.
 - Scroll control functionality: New scroll speed control with internationalized labels for presentation mode.
 - Auto Font Size feature: Automatic font size adjustment capability with comprehensive internationalization support.
+- Advanced data management: Comprehensive internationalization for upsert import operations and purge data functionality with detailed status messaging.
 
 Key behaviors:
 - Locale type union defines supported locales (English, Traditional Chinese, Japanese).
@@ -125,16 +111,14 @@ Key behaviors:
 - Enhanced actions support optional parameters for localized section types and custom labels.
 - Scroll speed control provides configurable timing for line shifting operations.
 - Auto Font Size feature automatically calculates optimal font sizes based on content and display dimensions.
+- Data management operations provide comprehensive internationalization for complex import/export and data cleanup workflows.
 
 **Section sources**
 - [index.ts:5-46](file://src/i18n/index.ts#L5-L46)
-- [en.ts:1-182](file://src/i18n/en.ts#L1-L182)
-- [zhTW.ts:1-182](file://src/i18n/zhTW.ts#L1-L182)
-- [ja.ts:1-182](file://src/i18n/ja.ts#L1-L182)
+- [en.ts:1-199](file://src/i18n/en.ts#L1-L199)
+- [zhTW.ts:1-199](file://src/i18n/zhTW.ts#L1-L199)
+- [ja.ts:1-199](file://src/i18n/ja.ts#L1-L199)
 - [SettingsPanel.tsx:419-447](file://src/components/SettingsPanel.tsx#L419-L447)
-- [appStore.ts:53-61](file://src/store/appStore.ts#L53-L61)
-- [PresentPanel.tsx:58-91](file://src/components/PresentPanel.tsx#L58-L91)
-- [PresentPanel.tsx:384-390](file://src/components/PresentPanel.tsx#L384-L390)
 
 ## Architecture Overview
 The i18n architecture is a thin, centralized store that exposes a translation object and locale state. Components depend on this store for all UI text. Electron's projection window uses a separate renderer that receives projection state via IPC; it does not render translated UI text, so i18n is not directly involved in projection rendering.
@@ -196,14 +180,16 @@ Each language pack provides complete coverage for:
 - Present panel controls and auto font size feature
 - Settings categories and presentation customization
 - Background gallery operations
-- Import/export functionality
+- Import/export functionality with upsert capabilities
 - Preparation list management
+- Data management operations with comprehensive purge functionality
+- Status message system with detailed operation feedback
 
 **Section sources**
 - [index.ts:6](file://src/i18n/index.ts#L6)
 - [index.ts:8](file://src/i18n/index.ts#L8)
 - [index.ts:14](file://src/i18n/index.ts#L14)
-- [ja.ts:1-182](file://src/i18n/ja.ts#L1-L182)
+- [ja.ts:1-199](file://src/i18n/ja.ts#L1-L199)
 
 ## Detailed Component Analysis
 
@@ -245,17 +231,17 @@ Translation keys are grouped by functional areas to keep the dictionary organize
 - Present panel controls and hints
 - Settings categories and labels
 - Background gallery operations
-- Import/export messages and placeholders
+- Import/export messages and placeholders with upsert capabilities
 - Preparation list actions and counts
-
-**Updated** Section types now include localized names for all supported section types (Intro, Verse, Pre-Chorus, Chorus, Bridge, Instrumental, Outro, Custom) across all three languages. The present section includes scrollSpeed and autoFontSize keys for internationalized scroll control and auto font size functionality.
+- Data management operations with comprehensive purge functionality
+- Status message system with detailed operation feedback
 
 This structure enables consistent key naming and simplifies maintenance across languages.
 
 **Section sources**
-- [en.ts:1-182](file://src/i18n/en.ts#L1-L182)
-- [zhTW.ts:1-182](file://src/i18n/zhTW.ts#L1-L182)
-- [ja.ts:1-182](file://src/i18n/ja.ts#L1-L182)
+- [en.ts:1-199](file://src/i18n/en.ts#L1-L199)
+- [zhTW.ts:1-199](file://src/i18n/zhTW.ts#L1-L199)
+- [ja.ts:1-199](file://src/i18n/ja.ts#L1-L199)
 
 ### Dynamic Language Switching Mechanism
 - Settings panel provides a language selector bound to the store's locale.
@@ -291,17 +277,19 @@ Settings-->>User : "UI re-renders in new language"
 - Editor panel: Passes localized section type names to store actions for dynamic labeling.
 - Song library: Uses localized section types for default song creation.
 - Present panel: Uses translation keys for scroll control functionality including speed adjustments and auto font size feature.
+- Data management operations: Comprehensive internationalization for import/export and purge functionality with detailed status messaging.
 
 ```mermaid
 graph LR
 Store["useI18n store"] --> App["App.tsx"]
-Store --> Settings["SettingsPanel.tsx"]
+Store --> Settings["SettingsPanel.tsx<br/>Import/Export & Data Management"]
 Store --> Projection["ProjectionView.tsx"]
 Store --> Present["PresentPanel.tsx<br/>Scroll Control & Auto Font Size"]
 Store --> Editor["EditorPanel.tsx"]
 Store --> Library["SongLibrary.tsx"]
 App --> Tabs["Tabs and header"]
 Settings --> Form["Form labels and placeholders"]
+Settings --> DataOps["Data Management Operations"]
 Projection --> State["Projection state from IPC"]
 Present --> Controls["Scroll Speed Controls"]
 Present --> AutoFontSize["Auto Font Size Toggle"]
@@ -311,7 +299,7 @@ Library --> DefaultLabels["Default Section Labels"]
 
 **Diagram sources**
 - [App.tsx:48-80](file://src/App.tsx#L48-L80)
-- [SettingsPanel.tsx:56-416](file://src/components/SettingsPanel.tsx#L56-L416)
+- [SettingsPanel.tsx:56-663](file://src/components/SettingsPanel.tsx#L56-L663)
 - [ProjectionView.tsx:22-29](file://src/components/ProjectionView.tsx#L22-L29)
 - [PresentPanel.tsx:384-390](file://src/components/PresentPanel.tsx#L384-L390)
 - [PresentPanel.tsx:396-401](file://src/components/PresentPanel.tsx#L396-L401)
@@ -320,7 +308,7 @@ Library --> DefaultLabels["Default Section Labels"]
 
 **Section sources**
 - [App.tsx:48-80](file://src/App.tsx#L48-L80)
-- [SettingsPanel.tsx:56-416](file://src/components/SettingsPanel.tsx#L56-L416)
+- [SettingsPanel.tsx:56-663](file://src/components/SettingsPanel.tsx#L56-L663)
 - [ProjectionView.tsx:22-29](file://src/components/ProjectionView.tsx#L22-L29)
 - [PresentPanel.tsx:384-390](file://src/components/PresentPanel.tsx#L384-L390)
 - [PresentPanel.tsx:396-401](file://src/components/PresentPanel.tsx#L396-L401)
@@ -339,7 +327,7 @@ Library --> DefaultLabels["Default Section Labels"]
 
 ## Japanese Language Implementation
 
-**New** LyricDeck now provides comprehensive Japanese language support with complete translation coverage across all application features.
+LyricDeck provides comprehensive Japanese language support with complete translation coverage across all application features, including advanced data management operations.
 
 ### Japanese Translation Coverage
 The Japanese translation file (`src/i18n/ja.ts`) provides complete localization for:
@@ -356,8 +344,9 @@ The Japanese translation file (`src/i18n/ja.ts`) provides complete localization 
 - **Present Panel**: Full presentation controls including auto font size feature
 - **Settings**: Comprehensive presentation customization options
 - **Background Gallery**: Image management and selection
-- **Import/Export**: Data transfer functionality
+- **Import/Export**: Data transfer functionality with upsert capabilities
 - **Preparation List**: Set list management
+- **Data Management**: Comprehensive purge functionality with detailed status messaging
 
 #### Technical Implementation
 The Japanese implementation follows the same structure as other language packs:
@@ -366,28 +355,7 @@ The Japanese implementation follows the same structure as other language packs:
 - Supports dynamic section labeling
 - Includes scroll speed and auto font size functionality
 - Provides complete localization for all UI elements
-
-### Japanese Language Integration
-The Japanese language is fully integrated into the existing i18n infrastructure:
-
-```typescript
-// Locale union includes Japanese
-export type Locale = 'en' | 'zh-TW' | 'ja';
-
-// Locale labels include Japanese display name
-export const localeLabels: Record<Locale, string> = {
-  en: 'English',
-  'zh-TW': '繁體中文',
-  ja: '日本語',
-};
-
-// Locales mapping includes Japanese translations
-const locales: Record<Locale, Translations> = {
-  en,
-  'zh-TW': zhTW,
-  ja,
-};
-```
+- Comprehensive support for upsert import operations and purge data functionality
 
 ### Japanese Localization Examples
 The Japanese translation provides culturally appropriate localization for Japanese users:
@@ -407,11 +375,413 @@ The Japanese translation provides culturally appropriate localization for Japane
 - "Auto Font Size" → "自動フォントサイズ" (Auto Font Size)
 - "Speed" → "速度" (Speed)
 
+**Example: Data Management**
+- "Purge All Data" → "すべてのデータを消去" (Purge All Data)
+- "Import (Update Existing)" → "インポート（既存を更新）" (Import - Update Existing)
+- "Purging..." → "消去中..." (Purging...)
+
 **Section sources**
-- [ja.ts:1-182](file://src/i18n/ja.ts#L1-L182)
+- [ja.ts:1-199](file://src/i18n/ja.ts#L1-L199)
 - [index.ts:6](file://src/i18n/index.ts#L6)
 - [index.ts:14](file://src/i18n/index.ts#L14)
 - [index.ts:8](file://src/i18n/index.ts#L8)
+
+## Import/Export Functionality
+
+### Standard Import/Export Operations
+The import/export system provides comprehensive data management capabilities with full internationalization support across all three supported languages.
+
+#### Export Functionality
+- **Export Data**: Exports all songs, settings, and background images to a single file
+- **Status Messages**: Provides localized success and error messages
+- **Progress Indicators**: Shows localized "Exporting..." status during operations
+
+#### Standard Import Functionality
+- **Import Data**: Imports songs, settings, and background images from exported files
+- **Validation**: Validates file format and provides appropriate error messages
+- **Success Feedback**: Displays localized confirmation with item counts
+
+#### Upsert Import Functionality
+The upsert import feature provides advanced data management capabilities:
+
+- **Import (Update Existing)**: Updates existing items by ID while adding new ones
+- **Smart Deduplication**: Automatically detects and updates existing songs and images
+- **Detailed Reporting**: Provides comprehensive success messages with specific counts for added vs. updated items
+- **Version Compatibility**: Supports both v1 and v2 export formats with appropriate handling
+
+### Translation Keys for Import/Export
+All three language packs (English, Traditional Chinese, Japanese) include comprehensive import/export translation keys:
+
+**English translations:**
+```typescript
+importExport: {
+  title: 'Import / Export',
+  export: 'Export Data',
+  exportDescription: 'Export all songs, settings, and background images to a file.',
+  import: 'Import Data',
+  importDescription: 'Import songs, settings, and background images from a file.',
+  importUpsert: 'Import (Update Existing)',
+  importUpsertDescription: 'Import data and replace existing songs and images with matching IDs. New items will be added.',
+  exportSuccess: 'Data exported successfully!',
+  importSuccess: 'Imported {songs} songs and {backgrounds} background images.',
+  importUpsertSuccess: 'Added {added} songs, updated {updated} songs. Backgrounds: {bgAdded} added, {bgUpdated} updated.',
+  importFailed: 'Import failed. The file may be invalid or corrupted.',
+  exporting: 'Exporting...',
+  importing: 'Importing...',
+}
+```
+
+**Traditional Chinese translations:**
+```typescript
+importExport: {
+  title: '匯入 / 匯出',
+  export: '匯出資料',
+  exportDescription: '將所有歌曲、設定和背景圖片匯出為檔案。',
+  import: '匯入資料',
+  importDescription: '從檔案匯入歌曲、設定和背景圖片。',
+  importUpsert: '匯入（更新現有）',
+  importUpsertDescription: '匯入資料並取代具有相同 ID 的歌曲和圖片。新項目將被新增。',
+  exportSuccess: '資料匯出成功！',
+  importSuccess: '已匯入 {songs} 首歌曲和 {backgrounds} 張背景圖片。',
+  importUpsertSuccess: '新增 {added} 首歌曲，更新 {updated} 首歌曲。背景圖片：新增 {bgAdded} 張，更新 {bgUpdated} 張。',
+  importFailed: '匯入失敗。檔案可能無效或已損壞。',
+  exporting: '匯出中...',
+  importing: '匯入中...',
+}
+```
+
+**Japanese translations:**
+```typescript
+importExport: {
+  title: 'インポート / エクスポート',
+  export: 'データをエクスポート',
+  exportDescription: 'すべての曲、設定、背景画像をファイルにエクスポートします。',
+  import: 'データをインポート',
+  importDescription: 'ファイルから曲、設定、背景画像をインポートします。',
+  importUpsert: 'インポート（既存を更新）',
+  importUpsertDescription: 'データをインポートし、同じIDを持つ曲と画像を上書きします。新しい項目は追加されます。',
+  exportSuccess: 'データのエクスポートが完了しました！',
+  importSuccess: '{songs} 曲と {backgrounds} 枚の背景画像をインポートしました。',
+  importUpsertSuccess: '{added} 曲を追加、{updated} 曲を更新。背景画像：{bgAdded} 枚追加、{bgUpdated} 枚更新。',
+  importFailed: 'インポートに失敗しました。ファイルが無効または破損している可能性があります。',
+  exporting: 'エクスポート中...',
+  importing: 'インポート中...',
+}
+```
+
+### Component Integration
+The import/export functionality is integrated into the SettingsPanel component through the following implementation:
+
+```typescript
+// Standard Import Handler
+async function handleImport() {
+  if (!window.electronAPI) return;
+  setBusy(true);
+  setStatus(null);
+  try {
+    const result = await window.electronAPI.importData();
+    if (result.success) {
+      setStatus(
+        t.importExport.importSuccess
+          .replace('{songs}', String(result.importedSongs || 0))
+          .replace('{backgrounds}', String(result.importedBackgrounds || 0))
+      );
+      onImportSuccess();
+    } else if (result.error) {
+      setStatus(t.importExport.importFailed);
+    }
+  } finally {
+    setBusy(false);
+  }
+}
+
+// Upsert Import Handler
+async function handleImportUpsert() {
+  if (!window.electronAPI) return;
+  setBusy(true);
+  setStatus(null);
+  try {
+    const result = await window.electronAPI.importDataUpsert();
+    if (result.success) {
+      setStatus(
+        t.importExport.importUpsertSuccess
+          .replace('{added}', String(result.importedSongs || 0))
+          .replace('{updated}', String(result.updatedSongs || 0))
+          .replace('{bgAdded}', String(result.importedBackgrounds || 0))
+          .replace('{bgUpdated}', String(result.updatedBackgrounds || 0))
+      );
+      onImportSuccess();
+    } else if (result.error) {
+      setStatus(t.importExport.importFailed);
+    }
+  } finally {
+    setBusy(false);
+  }
+}
+```
+
+**Section sources**
+- [en.ts:154-168](file://src/i18n/en.ts#L154-L168)
+- [zhTW.ts:156-170](file://src/i18n/zhTW.ts#L156-L170)
+- [ja.ts:156-170](file://src/i18n/ja.ts#L156-L170)
+- [SettingsPanel.tsx:493-535](file://src/components/SettingsPanel.tsx#L493-L535)
+- [main.ts:356-425](file://electron/main.ts#L356-L425)
+- [preload.ts:40-42](file://electron/preload.ts#L40-L42)
+
+## Data Management Operations
+
+### Purge Data Functionality
+The purge data system provides comprehensive data cleanup capabilities with full internationalization support.
+
+#### Purge All Data Operation
+- **Complete Data Removal**: Deletes all songs, settings, preparation lists, and background images
+- **Database Cleanup**: Removes all image metadata and binary data from SQLite database
+- **File System Cleanup**: Permanently removes all data files from disk
+- **Confirmation Required**: Requires explicit user confirmation before proceeding
+- **Irreversible Action**: Clearly warns users that this action cannot be undone
+
+#### Purge Songs Only Operation
+- **Selective Cleanup**: Removes only songs while preserving settings and background images
+- **Targeted Deletion**: Specifically targets song data without affecting other application data
+- **Safety Confirmation**: Requires user confirmation to prevent accidental data loss
+- **Preservation Strategy**: Maintains application configuration and media assets
+
+### Translation Keys for Data Management
+All three language packs (English, Traditional Chinese, Japanese) include comprehensive purge data translation keys:
+
+**English translations:**
+```typescript
+purgeData: {
+  title: 'Purge Data',
+  purgeAll: 'Purge All Data',
+  purgeAllDescription: 'Delete all songs, settings, and background images. This cannot be undone.',
+  purgeSongs: 'Purge Songs Only',
+  purgeSongsDescription: 'Delete all songs only. Settings and background images will be preserved.',
+  confirmPurgeAll: 'This will permanently delete ALL songs, settings, and background images. This action cannot be undone. Are you sure?',
+  confirmPurgeSongs: 'This will permanently delete ALL songs. Settings and background images will be preserved. Are you sure?',
+  purgeAllSuccess: 'All data has been purged.',
+  purgeSongsSuccess: 'All songs have been purged.',
+  purging: 'Purging...',
+}
+```
+
+**Traditional Chinese translations:**
+```typescript
+purgeData: {
+  title: '清除資料',
+  purgeAll: '清除所有資料',
+  purgeAllDescription: '刪除所有歌曲、設定和背景圖片。此操作無法復原。',
+  purgeSongs: '僅清除歌曲',
+  purgeSongsDescription: '僅刪除所有歌曲。設定和背景圖片將被保留。',
+  confirmPurgeAll: '這將永久刪除所有歌曲、設定和背景圖片。此操作無法復原。確定要繼續嗎？',
+  confirmPurgeSongs: '這將永久刪除所有歌曲。設定和背景圖片將被保留。確定要繼續嗎？',
+  purgeAllSuccess: '所有資料已清除。',
+  purgeSongsSuccess: '所有歌曲已清除。',
+  purging: '清除中...',
+}
+```
+
+**Japanese translations:**
+```typescript
+purgeData: {
+  title: 'データを消去',
+  purgeAll: 'すべてのデータを消去',
+  purgeAllDescription: 'すべての曲、設定、背景画像を削除します。この操作は取り消せません。',
+  purgeSongs: '曲のみ消去',
+  purgeSongsDescription: 'すべての曲のみを削除します。設定と背景画像は保持されます。',
+  confirmPurgeAll: 'すべての曲、設定、背景画像を完全に削除します。この操作は取り消せません。よろしいですか？',
+  confirmPurgeSongs: 'すべての曲を完全に削除します。設定と背景画像は保持されます。よろしいですか？',
+  purgeAllSuccess: 'すべてのデータが消去されました。',
+  purgeSongsSuccess: 'すべての曲が消去されました。',
+  purging: '消去中...',
+}
+```
+
+### Component Integration
+The purge data functionality is implemented as a dedicated component within the SettingsPanel:
+
+```typescript
+function PurgeDataSection({
+  t,
+  onPurgeAll,
+  onPurgeSongs,
+}: {
+  t: any;
+  onPurgeAll: () => void;
+  onPurgeSongs: () => void;
+}) {
+  const [status, setStatus] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function handlePurgeAll() {
+    if (!window.electronAPI) return;
+    const confirmed = window.confirm(t.purgeData.confirmPurgeAll);
+    if (!confirmed) return;
+
+    setBusy(true);
+    setStatus(null);
+    try {
+      await window.electronAPI.purgeAllData();
+      onPurgeAll();
+      setStatus(t.purgeData.purgeAllSuccess);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handlePurgeSongs() {
+    if (!window.electronAPI) return;
+    const confirmed = window.confirm(t.purgeData.confirmPurgeSongs);
+    if (!confirmed) return;
+
+    setBusy(true);
+    setStatus(null);
+    try {
+      await window.electronAPI.purgeSongsOnly();
+      onPurgeSongs();
+      setStatus(t.purgeData.purgeSongsSuccess);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="panel p-4 space-y-3">
+      <h3 className="text-sm font-medium text-surface-200">{t.purgeData.title}</h3>
+      <div className="space-y-3">
+        <div className="flex items-start gap-4">
+          <div className="flex-1">
+            <p className="text-xs text-surface-400">{t.purgeData.purgeAllDescription}</p>
+          </div>
+          <button
+            onClick={handlePurgeAll}
+            disabled={busy}
+            className="btn btn-secondary text-sm whitespace-nowrap text-red-400 border-red-400 hover:bg-red-400 hover:text-white"
+          >
+            {busy ? t.purgeData.purging : t.purgeData.purgeAll}
+          </button>
+        </div>
+        <div className="flex items-start gap-4">
+          <div className="flex-1">
+            <p className="text-xs text-surface-400">{t.purgeData.purgeSongsDescription}</p>
+          </div>
+          <button
+            onClick={handlePurgeSongs}
+            disabled={busy}
+            className="btn btn-secondary text-sm whitespace-nowrap text-amber-400 border-amber-400 hover:bg-amber-400 hover:text-white"
+          >
+            {busy ? t.purgeData.purging : t.purgeData.purgeSongs}
+          </button>
+        </div>
+        {status && (
+          <p className="text-xs text-primary-400 mt-2">{status}</p>
+        )}
+      </div>
+    </section>
+  );
+}
+```
+
+### Backend Implementation
+The backend implements comprehensive data management operations through IPC handlers:
+
+```typescript
+// Purge all data handler
+ipcMain.handle('purge-all-data', () => {
+  // Delete all data files
+  const songsPath = getSongsFilePath();
+  const settingsPath = getSettingsFilePath();
+  const prepListPath = getPreparationListFilePath();
+
+  if (fs.existsSync(songsPath)) fs.unlinkSync(songsPath);
+  if (fs.existsSync(settingsPath)) fs.unlinkSync(settingsPath);
+  if (fs.existsSync(prepListPath)) fs.unlinkSync(prepListPath);
+
+  // Purge all images and meta from SQLite
+  purgeAllImages();
+
+  return true;
+});
+
+// Purge songs only handler
+ipcMain.handle('purge-songs-only', () => {
+  const songsPath = getSongsFilePath();
+  if (fs.existsSync(songsPath)) fs.unlinkSync(songsPath);
+  return true;
+});
+```
+
+**Section sources**
+- [en.ts:183-195](file://src/i18n/en.ts#L183-L195)
+- [zhTW.ts:185-197](file://src/i18n/zhTW.ts#L185-L197)
+- [ja.ts:185-197](file://src/i18n/ja.ts#L185-L197)
+- [SettingsPanel.tsx:585-663](file://src/components/SettingsPanel.tsx#L585-L663)
+- [main.ts:427-448](file://electron/main.ts#L427-L448)
+- [preload.ts:44-46](file://electron/preload.ts#L44-L46)
+
+## Status Message System
+
+### Comprehensive Status Messaging
+The application implements a sophisticated status message system that provides clear, localized feedback for all data management operations.
+
+#### Status Message Categories
+- **Success Messages**: Confirm successful completion of operations with detailed information
+- **Error Messages**: Provide clear error descriptions and potential solutions
+- **Progress Indicators**: Show ongoing operation status with localized progress text
+- **Confirmation Dialogs**: Present clear warnings for destructive operations
+
+#### Dynamic Message Composition
+The status message system supports dynamic parameter substitution for personalized feedback:
+
+**Import Success Messages:**
+- Standard import: "Imported {songs} songs and {backgrounds} background images."
+- Upsert import: "Added {added} songs, updated {updated} songs. Backgrounds: {bgAdded} added, {bgUpdated} updated."
+
+**Purge Success Messages:**
+- All data purge: "All data has been purged."
+- Songs only purge: "All songs have been purged."
+
+#### Error Handling
+The system provides appropriate error messages for various failure scenarios:
+- File validation errors: "Import failed. The file may be invalid or corrupted."
+- Network or permission errors: Graceful degradation with user-friendly messages
+- Database errors: Clear indication of data integrity issues
+
+### Implementation Pattern
+The status message system follows a consistent pattern across all operations:
+
+```typescript
+// Status management pattern
+const [status, setStatus] = useState<string | null>(null);
+const [busy, setBusy] = useState(false);
+
+async function handleOperation() {
+  if (!window.electronAPI) return;
+  setBusy(true);
+  setStatus(null);
+  try {
+    const result = await window.electronAPI.operation();
+    if (result.success) {
+      setStatus(
+        t.operationKey.successMessage
+          .replace('{param1}', String(result.param1 || 0))
+          .replace('{param2}', String(result.param2 || 0))
+      );
+    } else if (result.error) {
+      setStatus(t.operationKey.errorMessage);
+    }
+  } finally {
+    setBusy(false);
+  }
+}
+```
+
+**Section sources**
+- [SettingsPanel.tsx:493-535](file://src/components/SettingsPanel.tsx#L493-L535)
+- [SettingsPanel.tsx:597-627](file://src/components/SettingsPanel.tsx#L597-L627)
+- [en.ts:154-195](file://src/i18n/en.ts#L154-L195)
+- [zhTW.ts:156-197](file://src/i18n/zhTW.ts#L156-L197)
+- [ja.ts:156-197](file://src/i18n/ja.ts#L156-L197)
 
 ## Action Enhancement
 
@@ -442,7 +812,7 @@ When creating sections, the system follows this priority order:
 **Section sources**
 - [appStore.ts:53-61](file://src/store/appStore.ts#L53-L61)
 - [appStore.ts:116-142](file://src/store/appStore.ts#L116-L142)
-- [appStore.ts:186-200](file://src/store/appStore.ts#L186-L200)
+- [appStore.ts:186-200](file://src/store/appStore.ts#L186-200)
 - [EditorPanel.tsx:106-107](file://src/components/EditorPanel.tsx#L106-L107)
 - [SongLibrary.tsx:88-91](file://src/components/SongLibrary.tsx#L88-L91)
 
@@ -569,9 +939,11 @@ When Auto Font Size is enabled, the system performs the following calculations:
 - Components depend on the i18n store for translations.
 - The store depends on language packs for translation values.
 - Electron main process manages projection windows and IPC; it does not depend on i18n.
-- The app store coordinates UI state and persistence; it now includes enhanced internationalization actions.
+- The app store coordinates UI state and persistence; it includes enhanced internationalization actions.
 - Components pass localized section types to store actions for dynamic labeling.
 - Present panel integrates scroll control functionality and Auto Font Size feature with internationalized labels.
+- Data management operations integrate comprehensive internationalization for import/export and purge functionality.
+- Status message system provides localized feedback for all data operations.
 
 ```mermaid
 graph TB
@@ -579,10 +951,10 @@ Store["useI18n store"] --> En["en.ts"]
 Store --> ZhTW["zhTW.ts"]
 Store --> Ja["ja.ts"]
 App["App.tsx"] --> Store
-Settings["SettingsPanel.tsx"] --> Store
+Settings["SettingsPanel.tsx<br/>Import/Export & Data Management"] --> Store
 Projection["ProjectionView.tsx"] --> Preload["preload.ts"]
 Present["PresentPanel.tsx"] --> Store
-Preload --> MainProc["electron/main.ts"]
+Preload --> MainProc["electron/main.ts<br/>Upsert Import & Purge Operations"]
 Editor["EditorPanel.tsx"] --> AppStore["Enhanced App Store"]
 Library["SongLibrary.tsx"] --> AppStore
 AppStore --> Store
@@ -595,29 +967,29 @@ Library --> MainProc
 
 **Diagram sources**
 - [index.ts:1-46](file://src/i18n/index.ts#L1-L46)
-- [en.ts:1-182](file://src/i18n/en.ts#L1-L182)
-- [zhTW.ts:1-182](file://src/i18n/zhTW.ts#L1-L182)
-- [ja.ts:1-182](file://src/i18n/ja.ts#L1-L182)
+- [en.ts:1-199](file://src/i18n/en.ts#L1-L199)
+- [zhTW.ts:1-199](file://src/i18n/zhTW.ts#L1-L199)
+- [ja.ts:1-199](file://src/i18n/ja.ts#L1-L199)
 - [App.tsx:12-102](file://src/App.tsx#L12-L102)
-- [SettingsPanel.tsx:1-523](file://src/components/SettingsPanel.tsx#L1-L523)
+- [SettingsPanel.tsx:1-664](file://src/components/SettingsPanel.tsx#L1-L664)
 - [ProjectionView.tsx:1-134](file://src/components/ProjectionView.tsx#L1-L134)
 - [PresentPanel.tsx:1-401](file://src/components/PresentPanel.tsx#L1-L401)
 - [EditorPanel.tsx:106-107](file://src/components/EditorPanel.tsx#L106-L107)
 - [SongLibrary.tsx:88-91](file://src/components/SongLibrary.tsx#L88-L91)
-- [preload.ts:1-43](file://electron/preload.ts#L1-L43)
-- [main.ts:1-390](file://electron/main.ts#L1-L390)
+- [preload.ts:1-48](file://electron/preload.ts#L1-L48)
+- [main.ts:1-484](file://electron/main.ts#L1-L484)
 - [appStore.ts:53-61](file://src/store/appStore.ts#L53-L61)
 
 **Section sources**
 - [index.ts:1-46](file://src/i18n/index.ts#L1-L46)
 - [App.tsx:12-102](file://src/App.tsx#L12-L102)
-- [SettingsPanel.tsx:1-523](file://src/components/SettingsPanel.tsx#L1-L523)
+- [SettingsPanel.tsx:1-664](file://src/components/SettingsPanel.tsx#L1-L664)
 - [ProjectionView.tsx:1-134](file://src/components/ProjectionView.tsx#L1-L134)
 - [PresentPanel.tsx:1-401](file://src/components/PresentPanel.tsx#L1-L401)
 - [EditorPanel.tsx:106-107](file://src/components/EditorPanel.tsx#L106-L107)
 - [SongLibrary.tsx:88-91](file://src/components/SongLibrary.tsx#L88-L91)
-- [preload.ts:1-43](file://electron/preload.ts#L1-L43)
-- [main.ts:1-390](file://electron/main.ts#L1-L390)
+- [preload.ts:1-48](file://electron/preload.ts#L1-L48)
+- [main.ts:1-484](file://electron/main.ts#L1-L484)
 - [appStore.ts:53-61](file://src/store/appStore.ts#L53-L61)
 
 ## Performance Considerations
@@ -626,7 +998,9 @@ Library --> MainProc
 - Enhanced store actions add minimal computational overhead for dynamic section labeling.
 - Scroll control functionality uses lightweight numeric inputs with minimal performance impact.
 - Auto Font Size feature performs calculations only when enabled or when conditions change, minimizing performance impact.
-- **New** Japanese language support adds minimal overhead as it follows the same architectural patterns as other language packs.
+- Data management operations use efficient batch processing with minimal memory footprint.
+- Status message system uses lightweight state management with immediate UI updates.
+- Upsert import operations optimize database queries for better performance with large datasets.
 - Avoid unnecessary re-renders by keeping translation usage scoped to components that need it.
 
 ## Troubleshooting Guide
@@ -641,9 +1015,13 @@ Common issues and resolutions:
 - Scroll speed values not updating: Check that the numeric input component properly handles value changes and passes values to shiftLines operations.
 - Auto Font Size toggle not working: Verify that the autoFontSize key exists in the present section of all translation files.
 - Auto Font Size not calculating properly: Check that font size calculations are triggered when song content or display configuration changes.
-- **New** Japanese language not appearing in language selector: Verify that the locale is properly included in the Locale union and localeLabels mapping.
-- **New** Japanese translations not loading: Check that the ja.ts file is properly imported and included in the locales mapping.
-- **New** Japanese section types not displaying correctly: Verify that all section types are properly localized in the Japanese translation file.
+- Import/Export functionality not working: Verify that all import/export translation keys exist in all language packs.
+- Upsert import not providing detailed feedback: Check that the importUpsertSuccess key includes all required parameters for detailed reporting.
+- Purge data operations not showing status messages: Verify that all purgeData translation keys exist and are properly referenced in the component.
+- Status messages not displaying correctly: Check that the status state management is properly implemented and translation keys are accessible.
+- Japanese language not appearing in language selector: Verify that the locale is properly included in the Locale union and localeLabels mapping.
+- Japanese translations not loading: Check that the ja.ts file is properly imported and included in the locales mapping.
+- Japanese section types not displaying correctly: Verify that all section types are properly localized in the Japanese translation file.
 
 **Section sources**
 - [index.ts:17-28](file://src/i18n/index.ts#L17-L28)
@@ -654,11 +1032,11 @@ Common issues and resolutions:
 - [SongLibrary.tsx:88-91](file://src/components/SongLibrary.tsx#L88-L91)
 - [PresentPanel.tsx:384-390](file://src/components/PresentPanel.tsx#L384-L390)
 - [PresentPanel.tsx:396-401](file://src/components/PresentPanel.tsx#L396-L401)
+- [SettingsPanel.tsx:493-535](file://src/components/SettingsPanel.tsx#L493-L535)
+- [SettingsPanel.tsx:597-627](file://src/components/SettingsPanel.tsx#L597-L627)
 
 ## Conclusion
-LyricDeck's i18n system is straightforward and effective: a central store manages locale and translations, language packs organize keys by functional area, and components consume translations via hooks. Dynamic language switching is seamless and persistent. The recent enhancement adds comprehensive Japanese language support with complete translation coverage across all application features, making the system truly multilingual for English, Traditional Chinese, and Japanese users. The enhanced internationalization capabilities now provide seamless dynamic section labeling, sophisticated scroll control functionality, and intelligent Auto Font Size feature that respect user language preferences and maintain proper localization across all features. Electron's projection window operates independently of i18n, focusing on rendering lyrics and backgrounds. Following the established patterns ensures consistency and scalability when adding new languages or keys.
-
-**Updated** The enhanced internationalization system now provides seamless dynamic section labeling, sophisticated scroll control functionality, intelligent Auto Font Size feature, and comprehensive Japanese language support that respect user language preferences and maintain proper localization across all features.
+LyricDeck's i18n system is straightforward and effective: a central store manages locale and translations, language packs organize keys by functional area, and components consume translations via hooks. Dynamic language switching is seamless and persistent. The system provides comprehensive support for advanced data management operations including upsert import functionality, purge data vocabulary, and sophisticated status message translations across all supported languages. The enhanced internationalization capabilities provide seamless dynamic section labeling, sophisticated scroll control functionality, intelligent Auto Font Size feature, and comprehensive data management operations that respect user language preferences and maintain proper localization across all features. Electron's projection window operates independently of i18n, focusing on rendering lyrics and backgrounds. Following the established patterns ensures consistency and scalability when adding new languages or keys.
 
 ## Appendices
 
@@ -676,15 +1054,18 @@ Guidelines:
 - Avoid embedding dynamic values inside translation strings; pass values externally and compose messages.
 - Ensure section types are properly localized for dynamic labeling functionality.
 - Include scrollSpeed and autoFontSize keys in the present section for consistent user experience.
-- **New** Follow the Japanese implementation pattern for comprehensive feature coverage.
-- **New** Test the new language thoroughly across all application components.
+- Include comprehensive import/export translation keys for both standard and upsert import operations.
+- Include complete purge data translation keys for all data management operations.
+- Include status message translation keys for all operational feedback.
+- Follow the Japanese implementation pattern for comprehensive feature coverage.
+- Test the new language thoroughly across all application components, especially data management operations.
 
 **Section sources**
 - [index.ts:5-18](file://src/i18n/index.ts#L5-L18)
 - [index.ts:20-45](file://src/i18n/index.ts#L20-L45)
-- [en.ts:1-182](file://src/i18n/en.ts#L1-L182)
-- [zhTW.ts:1-182](file://src/i18n/zhTW.ts#L1-L182)
-- [ja.ts:1-182](file://src/i18n/ja.ts#L1-L182)
+- [en.ts:1-199](file://src/i18n/en.ts#L1-L199)
+- [zhTW.ts:1-199](file://src/i18n/zhTW.ts#L1-L199)
+- [ja.ts:1-199](file://src/i18n/ja.ts#L1-L199)
 
 ### Managing Translation Keys
 - Group keys by functional areas to improve readability and maintenance.
@@ -694,17 +1075,21 @@ Guidelines:
 - Include comprehensive section types for all supported section types to enable dynamic labeling.
 - Ensure scroll control functionality includes proper internationalization keys for consistent user experience.
 - Include autoFontSize key in the present section for Auto Font Size feature internationalization.
-- **New** Maintain consistency across all three language packs (English, Traditional Chinese, Japanese).
-- **New** Follow established patterns for cultural appropriateness in translations.
+- Include comprehensive import/export keys for both standard and upsert import operations.
+- Include complete purge data keys for all data management operations.
+- Include status message keys for all operational feedback scenarios.
+- Maintain consistency across all three language packs (English, Traditional Chinese, Japanese).
+- Follow established patterns for cultural appropriateness in translations.
 
 **Section sources**
 - [en.ts:4-7](file://src/i18n/en.ts#L4-L7)
-- [en.ts:169-176](file://src/i18n/en.ts#L169-L176)
-- [en.ts:52-62](file://src/i18n/en.ts#L52-L62)
+- [en.ts:154-195](file://src/i18n/en.ts#L154-L195)
 - [en.ts:98-99](file://src/i18n/en.ts#L98-L99)
 - [zhTW.ts:54-64](file://src/i18n/zhTW.ts#L54-L64)
+- [zhTW.ts:156-197](file://src/i18n/zhTW.ts#L156-L197)
 - [zhTW.ts:100-101](file://src/i18n/zhTW.ts#L100-L101)
 - [ja.ts:54-64](file://src/i18n/ja.ts#L54-L64)
+- [ja.ts:156-197](file://src/i18n/ja.ts#L156-L197)
 - [ja.ts:100-101](file://src/i18n/ja.ts#L100-L101)
 
 ### Fallback Mechanisms
@@ -713,7 +1098,10 @@ Guidelines:
 - If localized section type names are not provided to enhanced actions, the system falls back to raw section type names.
 - Scroll control functionality gracefully handles missing scrollSpeed keys with appropriate fallback behavior.
 - Auto Font Size feature gracefully handles missing autoFontSize keys with appropriate fallback behavior.
-- **New** Japanese language support provides comprehensive fallback behavior consistent with other language packs.
+- Import/export operations gracefully handle missing translation keys with appropriate fallback behavior.
+- Data management operations provide sensible defaults when translation keys are unavailable.
+- Status message system handles missing keys with generic fallback messages.
+- Japanese language support provides comprehensive fallback behavior consistent with other language packs.
 
 **Section sources**
 - [index.ts:17-28](file://src/i18n/index.ts#L17-L28)
@@ -743,7 +1131,10 @@ Guidelines:
   - Scroll control functionality: Use t.present.scrollSpeed for internationalized scroll speed labels in PresentPanel.
   - Auto Font Size functionality: Use t.present.autoFontSize for internationalized auto font size toggle labels in PresentPanel.
   - Dynamic section labeling: Pass localized section types to store actions for proper internationalization.
-  - **New** Japanese language integration: Use Japanese translations for Japanese-speaking users.
+  - Import/Export operations: Use t.importExport keys for comprehensive data management internationalization.
+  - Data management operations: Use t.purgeData keys for complete purge functionality internationalization.
+  - Status messages: Implement localized status feedback for all data operations.
+  - Japanese language integration: Use Japanese translations for Japanese-speaking users.
 - Handling user language preferences:
   - Bind a select element to the store's locale setter.
   - Persist the selection to local storage for continuity across sessions.
@@ -784,7 +1175,34 @@ Guidelines:
 // In SongLibrary.tsx  
 <button onClick={() => addSong(t.sectionTypes.Verse + ' 1')}>
 ```
-- **New** Implementing Japanese language support:
+- Implementing import/export operations:
+```typescript
+// In SettingsPanel.tsx
+async function handleImportUpsert() {
+  const result = await window.electronAPI.importDataUpsert();
+  if (result.success) {
+    setStatus(
+      t.importExport.importUpsertSuccess
+        .replace('{added}', String(result.importedSongs || 0))
+        .replace('{updated}', String(result.updatedSongs || 0))
+        .replace('{bgAdded}', String(result.importedBackgrounds || 0))
+        .replace('{bgUpdated}', String(result.updatedBackgrounds || 0))
+    );
+  }
+}
+```
+- Implementing purge data operations:
+```typescript
+// In SettingsPanel.tsx
+async function handlePurgeAll() {
+  const confirmed = window.confirm(t.purgeData.confirmPurgeAll);
+  if (!confirmed) return;
+  
+  await window.electronAPI.purgeAllData();
+  setStatus(t.purgeData.purgeAllSuccess);
+}
+```
+- Implementing Japanese language support:
 ```typescript
 // In SettingsPanel.tsx
 <select
@@ -808,6 +1226,8 @@ Guidelines:
 - [PresentPanel.tsx:396-401](file://src/components/PresentPanel.tsx#L396-L401)
 - [EditorPanel.tsx:106-107](file://src/components/EditorPanel.tsx#L106-L107)
 - [SongLibrary.tsx:88-91](file://src/components/SongLibrary.tsx#L88-L91)
+- [SettingsPanel.tsx:514-535](file://src/components/SettingsPanel.tsx#L514-L535)
+- [SettingsPanel.tsx:597-627](file://src/components/SettingsPanel.tsx#L597-L627)
 - [ja.ts:14](file://src/i18n/ja.ts#L14)
 
 ### Best Practices for Multilingual Desktop Applications
@@ -823,6 +1243,12 @@ Guidelines:
 - Test scroll speed control across different languages to ensure proper label display and user comprehension.
 - Implement Auto Font Size feature with proper internationalization for intelligent presentation optimization.
 - Test Auto Font Size functionality across different languages and display configurations to ensure optimal user experience.
-- **New** Follow established patterns for Japanese language implementation to ensure comprehensive feature coverage.
-- **New** Test all three supported languages (English, Traditional Chinese, Japanese) for consistency and completeness.
-- **New** Ensure cultural appropriateness in translations, especially for technical terminology and user interface elements.
+- Implement comprehensive import/export functionality with proper internationalization for data management operations.
+- Test import/export operations across all supported languages to ensure proper user feedback and error handling.
+- Implement data management operations with comprehensive internationalization for purge functionality.
+- Test data management operations across all languages to ensure proper confirmation dialogs and status messages.
+- Follow established patterns for Japanese language implementation to ensure comprehensive feature coverage.
+- Test all three supported languages (English, Traditional Chinese, Japanese) for consistency and completeness.
+- Ensure cultural appropriateness in translations, especially for technical terminology and user interface elements.
+- Implement robust status message system with proper internationalization for all operational feedback.
+- Test status messages across different languages to ensure proper parameter substitution and user comprehension.
