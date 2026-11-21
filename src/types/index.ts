@@ -66,7 +66,9 @@ export interface Song {
   updatedAt: string;
 }
 
-export type ProjectionMode = 'live' | 'blank' | 'black' | 'logo' | 'clear';
+export type ProjectionMode = 'live' | 'blank' | 'black' | 'logo' | 'clear' | 'camera';
+
+export type PipPosition = 'bottom-left' | 'bottom-right';
 
 export interface ProjectionState {
   mode: ProjectionMode;
@@ -79,6 +81,9 @@ export interface ProjectionState {
   background: BackgroundSettings;
   textStyle: TextStyle;
   copyright?: string;
+  cameraDeviceId?: string;
+  pipEnabled?: boolean;
+  pipPosition?: PipPosition;
 }
 
 export interface AppSettings {

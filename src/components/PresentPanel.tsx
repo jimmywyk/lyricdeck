@@ -3,6 +3,7 @@ import { useAppStore } from '../store/appStore';
 import { useI18n } from '../i18n';
 import { PreparationList } from './PreparationList';
 import { safeBackgroundStyle } from '../utils/sanitize';
+import type { PipPosition } from '../types';
 
 function calculateOptimalFontSize(
   lyrics: string,
@@ -58,6 +59,76 @@ export function PresentPanel() {
   const [selectedDisplay, setSelectedDisplay] = useState<string>('');
   const [scrollSpeed, setScrollSpeed] = useState<number>(0);
   const [autoFontSize, setAutoFontSize] = useState<boolean>(true);
+  const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
+  const [selectedCamera, setSelectedCamera] = useState<string>('');
+
+  // Picture-in-Picture state (kept in projectionState so the projector stays in sync)
+  const pipEnabled = projectionState.pipEnabled ?? false;
+  const pipPosition = projectionState.pipPosition ?? 'bottom-right';
+
+  // Enumerate camera devices (labels require a prior permission grant,
+  // so request a stream once to unlock them, then stop it immediately)
+  useEffect(() => {
+    let stream: MediaStream | null = null;
+    let cancelled = false;
+
+    async function loadCameras() {
+      if (!navigator.mediaDevices?.enumerateDevices) return;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      } catch {
+        return; // no camera or permission denied
+      }
+      if (cancelled) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cams = devices.filter((d) => d.kind === 'videoinput');
+      setCameras(cams);
+      if (cams.length > 0) setSelectedCamera(cams[0].deviceId);
+      stream.getTracks().forEach((track) => track.stop());
+    }
+
+    loadCameras();
+
+    return () => {
+      cancelled = true;
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
+
+  function toggleVisualizer() {
+    if (projectionState.mode === 'camera') {
+      setProjectionMode('live');
+    } else {
+      useAppStore.getState().setProjectionState({ mode: 'camera', cameraDeviceId: selectedCamera || undefined });
+    }
+  }
+
+  function handleCameraChange(deviceId: string) {
+    setSelectedCamera(deviceId);
+    // Update the live feed without re-entering the mode (visualizer or PiP)
+    if (projectionState.mode === 'camera' || (projectionState.pipEnabled ?? false)) {
+      useAppStore.getState().setProjectionState({ cameraDeviceId: deviceId });
+    }
+  }
+
+  function togglePip() {
+    const current = useAppStore.getState().projectionState;
+    const next = !(current.pipEnabled ?? false);
+    useAppStore.getState().setProjectionState({
+      pipEnabled: next,
+      pipPosition: current.pipPosition ?? 'bottom-right',
+      cameraDeviceId: next ? selectedCamera || undefined : current.cameraDeviceId,
+    });
+  }
+
+  function setPipCorner(position: PipPosition) {
+    useAppStore.getState().setProjectionState({ pipPosition: position });
+  }
 
   // Compute uniform auto font size across ALL sections of the song
   const { setAutoFontSizeValue } = useAppStore();
@@ -135,6 +206,16 @@ export function PresentPanel() {
           e.preventDefault();
           toggleProjection();
           break;
+        case 'v':
+        case 'V':
+          e.preventDefault();
+          toggleVisualizer();
+          break;
+        case 'i':
+        case 'I':
+          e.preventDefault();
+          togglePip();
+          break;
         case 'Escape':
           e.preventDefault();
           if (projectionState.mode !== 'live') {
@@ -143,7 +224,7 @@ export function PresentPanel() {
           break;
       }
     },
-    [song, projectionState.mode, nextSlide, prevSlide, setProjectionMode, isProjectionOpen, selectedDisplay]
+    [song, projectionState.mode, projectionState.pipEnabled, nextSlide, prevSlide, setProjectionMode, isProjectionOpen, selectedDisplay, selectedCamera]
   );
 
   useEffect(() => {
@@ -199,7 +280,7 @@ export function PresentPanel() {
   return (
     <div className="flex flex-col h-full">
       {/* Projection Controls Bar */}
-      <div className="p-3 border-b border-surface-700 flex items-center gap-3">
+      <div className="p-3 border-b border-surface-700 flex items-center gap-3 flex-wrap">
         <select
           value={selectedDisplay}
           onChange={(e) => setSelectedDisplay(e.target.value)}
@@ -219,6 +300,47 @@ export function PresentPanel() {
           <button onClick={handleCloseProjection} className="btn btn-danger text-sm">
             {t.present.stopProjection}
           </button>
+        )}
+        <div className="w-px h-8 bg-surface-700 mx-1" />
+        <select
+          value={selectedCamera}
+          onChange={(e) => handleCameraChange(e.target.value)}
+          className="input w-44 text-xs py-1.5"
+          aria-label={t.present.camera}
+        >
+          {cameras.length === 0 ? (
+            <option value="">{t.present.noCamera}</option>
+          ) : (
+            cameras.map((cam, i) => (
+              <option key={cam.deviceId} value={cam.deviceId}>
+                {cam.label || `${t.present.camera} ${i + 1}`}
+              </option>
+            ))
+          )}
+        </select>
+        <button
+          onClick={toggleVisualizer}
+          className={`btn text-sm ${projectionState.mode === 'camera' ? 'btn-primary' : 'btn-secondary'}`}
+        >
+          {t.present.visualizer}
+        </button>
+        <button
+          onClick={togglePip}
+          disabled={projectionState.mode === 'camera'}
+          className={`btn text-sm ${pipEnabled ? 'btn-primary' : 'btn-secondary'} disabled:opacity-40 disabled:cursor-not-allowed`}
+        >
+          {t.present.pip}
+        </button>
+        {pipEnabled && projectionState.mode !== 'camera' && (
+          <select
+            value={pipPosition}
+            onChange={(e) => setPipCorner(e.target.value as PipPosition)}
+            className="input w-36 text-xs py-1.5"
+            aria-label={t.present.pipPosition}
+          >
+            <option value="bottom-left">{t.present.pipLeft}</option>
+            <option value="bottom-right">{t.present.pipRight}</option>
+          </select>
         )}
         <div className="flex-1" />
         <span

@@ -4,6 +4,8 @@
 **Referenced Files in This Document**
 - [SettingsPanel.tsx](file://src/components/SettingsPanel.tsx)
 - [BackgroundGallery.tsx](file://src/components/BackgroundGallery.tsx)
+- [ProjectionView.tsx](file://src/components/ProjectionView.tsx)
+- [sanitize.ts](file://src/utils/sanitize.ts)
 - [appStore.ts](file://src/store/appStore.ts)
 - [db.ts](file://electron/db.ts)
 - [main.ts](file://electron/main.ts)
@@ -15,11 +17,10 @@
 
 ## Update Summary
 **Changes Made**
-- Added comprehensive data management system with three distinct import operations (standard, upsert, and export)
-- Implemented new Purge Data section with two targeted purge options (full purge and songs-only)
-- Enhanced gallery refresh mechanism using React keys for improved state synchronization
-- Added detailed user feedback systems with real-time status updates and confirmation dialogs
-- Updated architecture diagrams to reflect new data flow patterns and smart deduplication logic
+- Enhanced background preview functionality with comprehensive input validation using sanitizeImageUrl() and sanitizeNumber() functions
+- Added robust error handling for invalid image URLs and overlay opacity values
+- Improved security by preventing CSS injection attacks through sanitized user inputs
+- Updated both SettingsPanel and ProjectionView components to use centralized sanitization utilities
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -28,13 +29,14 @@
 4. [Architecture Overview](#architecture-overview)
 5. [Detailed Component Analysis](#detailed-component-analysis)
 6. [Data Management Features](#data-management-features)
-7. [Dependency Analysis](#dependency-analysis)
-8. [Performance Considerations](#performance-considerations)
-9. [Troubleshooting Guide](#troubleshooting-guide)
-10. [Conclusion](#conclusion)
+7. [Security and Input Validation](#security-and-input-validation)
+8. [Dependency Analysis](#dependency-analysis)
+9. [Performance Considerations](#performance-considerations)
+10. [Troubleshooting Guide](#troubleshooting-guide)
+11. [Conclusion](#conclusion)
 
 ## Introduction
-The Settings Panel component provides comprehensive customization capabilities for presentation backgrounds and text styling. It enables users to configure solid colors, gradient backgrounds, or image backgrounds per song, along with advanced text styling options including fonts, colors, alignment, shadows, and outlines. The component integrates seamlessly with the Zustand store for persistent state management and utilizes a SQLite database for storing background images with a custom protocol for serving them efficiently. **Updated**: Significantly enhanced with advanced data management features including upsert import with smart deduplication, comprehensive purge options, improved gallery refresh mechanisms, and detailed user feedback systems.
+The Settings Panel component provides comprehensive customization capabilities for presentation backgrounds and text styling. It enables users to configure solid colors, gradient backgrounds, or image backgrounds per song, along with advanced text styling options including fonts, colors, alignment, shadows, and outlines. The component integrates seamlessly with the Zustand store for persistent state management and utilizes a SQLite database for storing background images with a custom protocol for serving them efficiently. **Updated**: Significantly enhanced with advanced data management features including upsert import with smart deduplication, comprehensive purge options, improved gallery refresh mechanisms, detailed user feedback systems, and robust input validation with security-focused sanitization.
 
 ## Project Structure
 The Settings Panel is organized within the components directory alongside other presentation-related components. It leverages shared types, internationalization, and state management patterns established across the application.
@@ -44,8 +46,12 @@ graph TB
 subgraph "Components"
 SP[SettingsPanel.tsx]
 BG[BackgroundGallery.tsx]
+PV[ProjectionView.tsx]
 IES[ImportExportSection]
 PDS[PurgeDataSection]
+end
+subgraph "Utilities"
+SAN[sanitize.ts]
 end
 subgraph "State Management"
 ZS[zustand store]
@@ -61,10 +67,13 @@ TM[types/index.ts]
 I18N[i18n]
 end
 SP --> BG
+SP --> PV
+SP --> SAN
 SP --> IES
 SP --> PDS
 SP --> AS
 BG --> EP
+PV --> SAN
 AS --> EP
 EP --> EM
 EM --> DB
@@ -73,8 +82,10 @@ SP --> I18N
 ```
 
 **Diagram sources**
-- [SettingsPanel.tsx:1-664](file://src/components/SettingsPanel.tsx#L1-L664)
+- [SettingsPanel.tsx:1-665](file://src/components/SettingsPanel.tsx#L1-L665)
 - [BackgroundGallery.tsx:1-99](file://src/components/BackgroundGallery.tsx#L1-L99)
+- [ProjectionView.tsx:1-127](file://src/components/ProjectionView.tsx#L1-L127)
+- [sanitize.ts:1-132](file://src/utils/sanitize.ts#L1-L132)
 - [appStore.ts:1-425](file://src/store/appStore.ts#L1-L425)
 - [preload.ts:1-48](file://electron/preload.ts#L1-L48)
 - [main.ts:1-484](file://electron/main.ts#L1-L484)
@@ -82,7 +93,7 @@ SP --> I18N
 - [index.ts:1-90](file://src/types/index.ts#L1-L90)
 
 **Section sources**
-- [SettingsPanel.tsx:1-664](file://src/components/SettingsPanel.tsx#L1-L664)
+- [SettingsPanel.tsx:1-665](file://src/components/SettingsPanel.tsx#L1-L665)
 - [BackgroundGallery.tsx:1-99](file://src/components/BackgroundGallery.tsx#L1-L99)
 - [appStore.ts:1-425](file://src/store/appStore.ts#L1-L425)
 
@@ -93,7 +104,7 @@ The Settings Panel consists of several key subsystems that work together to prov
 The background system supports three distinct modes:
 - **Solid Color**: Direct color picker with hex value input
 - **Gradient**: CSS gradient input with preset templates
-- **Image**: File selection and gallery integration
+- **Image**: File selection and gallery integration with secure URL validation
 
 ### Text Styling Engine
 Advanced typography controls including:
@@ -116,16 +127,21 @@ Full localization support through the i18n system with dynamic language switchin
 - [en.ts:100-139](file://src/i18n/en.ts#L100-L139)
 
 ## Architecture Overview
-The Settings Panel implements a reactive architecture that combines local state management with persistent storage through multiple layers.
+The Settings Panel implements a reactive architecture that combines local state management with persistent storage through multiple layers, enhanced with comprehensive input validation and security measures.
 
 ```mermaid
 sequenceDiagram
 participant UI as "Settings Panel"
+participant Sanitize as "Sanitization Utils"
 participant Store as "Zustand Store"
 participant Electron as "Electron API"
 participant DB as "SQLite Database"
 participant Protocol as "Custom Protocol"
 UI->>UI : User selects background type
+UI->>Sanitize : sanitizeImageUrl(imageUrl)
+Sanitize-->>UI : Validated URL or null
+UI->>Sanitize : sanitizeNumber(opacity, 0, 1, 0)
+Sanitize-->>UI : Clamped numeric value
 UI->>Store : updateSong(songId, updates)
 Store->>Store : Persist to memory state
 Store->>Electron : saveToDisk() via IPC
@@ -142,6 +158,7 @@ Protocol-->>UI : Serve image bytes
 
 **Diagram sources**
 - [SettingsPanel.tsx:47-54](file://src/components/SettingsPanel.tsx#L47-L54)
+- [sanitize.ts:71-100](file://src/utils/sanitize.ts#L71-L100)
 - [appStore.ts:379-384](file://src/store/appStore.ts#L379-L384)
 - [main.ts:221-235](file://electron/main.ts#L221-235)
 - [db.ts:70-87](file://electron/db.ts#L70-87)
@@ -150,9 +167,9 @@ Protocol-->>UI : Serve image bytes
 ## Detailed Component Analysis
 
 ### SettingsPanel Component
-The main Settings Panel component orchestrates all customization features through a unified interface.
+The main Settings Panel component orchestrates all customization features through a unified interface with enhanced security validation.
 
-#### Background Configuration Flow
+#### Background Configuration Flow with Security Validation
 ```mermaid
 flowchart TD
 Start([User opens Settings Panel]) --> CheckSong{"Song Selected?"}
@@ -166,11 +183,15 @@ ColorMode --> UpdateColor["Update background color"]
 GradientMode --> UpdateGradient["Update gradient CSS"]
 ImageMode --> SelectFile["Open file dialog"]
 SelectFile --> SaveImage["Save to SQLite database"]
-SaveImage --> UpdateImage["Update background with URL"]
+SaveImage --> ValidateURL["sanitizeImageUrl(value)"]
+ValidateURL --> |Valid| UpdateImage["Update background with URL"]
+ValidateURL --> |Invalid| Fallback["Use fallback color"]
 UpdateColor --> PersistState["Persist to store"]
 UpdateGradient --> PersistState
 UpdateImage --> PersistState
-PersistState --> RealtimePreview["Real-time preview update"]
+Fallback --> PersistState
+PersistState --> ValidateOpacity["sanitizeNumber(opacity, 0, 1, 0)"]
+ValidateOpacity --> RealtimePreview["Real-time preview update"]
 RealtimePreview --> End([Settings saved])
 ```
 
@@ -178,6 +199,7 @@ RealtimePreview --> End([Settings saved])
 - [SettingsPanel.tsx:7-24](file://src/components/SettingsPanel.tsx#L7-L24)
 - [SettingsPanel.tsx:29-45](file://src/components/SettingsPanel.tsx#L29-L45)
 - [SettingsPanel.tsx:47-54](file://src/components/SettingsPanel.tsx#L47-L54)
+- [sanitize.ts:71-100](file://src/utils/sanitize.ts#L71-L100)
 
 #### Text Styling Configuration
 The text styling system provides granular control over typography and layout:
@@ -210,15 +232,22 @@ class PresentationSettings {
 +TextStyle textStyle
 +boolean showCopyright
 }
+class SanitizationUtils {
++sanitizeImageUrl(url) : string|null
++sanitizeNumber(value, min, max, fallback) : number
++safeBackgroundStyle(bg, fallback) : CSSProperties
+}
 TextStyle --> PresentationSettings : "configured by"
 BackgroundSettings --> PresentationSettings : "configured by"
+SanitizationUtils --> PresentationSettings : "validates"
 ```
 
 **Diagram sources**
 - [index.ts:29-48](file://src/types/index.ts#L29-L48)
+- [sanitize.ts:106-131](file://src/utils/sanitize.ts#L106-L131)
 
-#### Form Validation and Real-time Preview
-The component implements comprehensive validation and immediate feedback mechanisms:
+#### Form Validation and Real-time Preview with Security
+The component implements comprehensive validation and immediate feedback mechanisms with enhanced security:
 
 **Section sources**
 - [SettingsPanel.tsx:29-45](file://src/components/SettingsPanel.tsx#L29-L45)
@@ -226,6 +255,7 @@ The component implements comprehensive validation and immediate feedback mechani
 - [SettingsPanel.tsx:105-131](file://src/components/SettingsPanel.tsx#L105-L131)
 - [SettingsPanel.tsx:133-187](file://src/components/SettingsPanel.tsx#L133-L187)
 - [SettingsPanel.tsx:244-396](file://src/components/SettingsPanel.tsx#L244-L396)
+- [sanitize.ts:71-100](file://src/utils/sanitize.ts#L71-L100)
 
 ### BackgroundGallery Integration
 The Background Gallery component provides centralized image management with CRUD operations.
@@ -265,7 +295,7 @@ Gallery->>Gallery : Remove from state
 **Section sources**
 - [BackgroundGallery.tsx:1-99](file://src/components/BackgroundGallery.tsx#L1-L99)
 - [main.ts:237-264](file://electron/main.ts#L237-264)
-- [db.ts:106-131](file://electron/db.ts#L106-131)
+- [db.ts:106-131](file://electron/db.ts#L106-L131)
 
 ### Zustand Store Integration
 The Settings Panel integrates deeply with the Zustand store for state persistence and synchronization.
@@ -283,12 +313,16 @@ LoadData --> StoreState
 SettingsPanel --> UpdateProjection["setProjectionState"]
 UpdateProjection --> ElectronIPC
 ElectronIPC --> ProjectionWindow["Projection Window"]
+ProjectionWindow --> SanitizeOverlay["sanitizeNumber(opacity)"]
+SanitizeOverlay --> SafeRendering["Safe overlay rendering"]
 ```
 
 **Diagram sources**
-- [appStore.ts:174-180](file://src/store/appStore.ts#L174-180)
+- [appStore.ts:174-180](file://src/store/appStore.ts#L174-L180)
 - [appStore.ts:379-384](file://src/store/appStore.ts#L379-L384)
-- [appStore.ts:242-249](file://src/store/appStore.ts#L242-249)
+- [appStore.ts:242-249](file://src/store/appStore.ts#L242-L249)
+- [ProjectionView.tsx:75-77](file://src/components/ProjectionView.tsx#L75-L77)
+- [sanitize.ts:96-100](file://src/utils/sanitize.ts#L96-L100)
 
 **Section sources**
 - [appStore.ts:1-425](file://src/store/appStore.ts#L1-L425)
@@ -320,7 +354,7 @@ META ||--|| APP_SETTINGS : "configured by"
 
 **Section sources**
 - [db.ts:1-250](file://electron/db.ts#L1-L250)
-- [main.ts:221-235](file://electron/main.ts#L221-235)
+- [main.ts:221-235](file://electron/main.ts#L221-L235)
 
 ### Custom Protocol Implementation
 The application implements a custom protocol (`lyricdeck-img://`) for efficient image serving.
@@ -343,12 +377,12 @@ Note over Protocol,Renderer : Images cached for 1 year
 
 **Diagram sources**
 - [main.ts:12-16](file://electron/main.ts#L12-L16)
-- [main.ts:362-374](file://electron/main.ts#L362-374)
+- [main.ts:362-374](file://electron/main.ts#L362-L374)
 - [db.ts:89-104](file://electron/db.ts#L89-L104)
 
 **Section sources**
 - [main.ts:12-16](file://electron/main.ts#L12-L16)
-- [main.ts:362-374](file://electron/main.ts#L362-374)
+- [main.ts:362-374](file://electron/main.ts#L362-L374)
 - [db.ts:89-104](file://electron/db.ts#L89-L104)
 
 ## Data Management Features
@@ -412,18 +446,54 @@ All data operations now provide comprehensive user feedback:
 - [preload.ts:39-47](file://electron/preload.ts#L39-L47)
 - [main.ts:356-448](file://electron/main.ts#L356-L448)
 
+## Security and Input Validation
+
+### Comprehensive Input Sanitization
+The Settings Panel now implements robust input validation to prevent security vulnerabilities and ensure data integrity:
+
+#### Image URL Validation
+- **Function**: `sanitizeImageUrl()` validates image URLs against allowed protocols
+- **Allowed Protocols**: `lyricdeck-img://` custom protocol and safe data URLs
+- **Rejected Patterns**: External URLs, JavaScript protocols, and potentially malicious sources
+- **Fallback Behavior**: Returns null for invalid URLs, preventing unsafe background images
+
+#### Numeric Value Validation
+- **Function**: `sanitizeNumber()` ensures numeric values are within safe ranges
+- **Range Enforcement**: Clamps values between specified minimum and maximum bounds
+- **Type Safety**: Handles undefined, null, and non-numeric inputs gracefully
+- **Default Values**: Provides sensible fallback values when inputs are invalid
+
+#### Overlay Opacity Protection
+- **Application**: Used for background overlay opacity values (0-1 range)
+- **Validation**: Prevents CSS injection through malformed opacity values
+- **Display Consistency**: Ensures consistent visual behavior across different browsers
+
+### Security Benefits
+- **CSS Injection Prevention**: Blocks malicious CSS values from being injected via inline styles
+- **XSS Attack Mitigation**: Prevents execution of JavaScript through background URLs
+- **Data Integrity**: Ensures all user inputs conform to expected formats and ranges
+- **Graceful Degradation**: Falls back to safe defaults when inputs are invalid
+
+**Section sources**
+- [sanitize.ts:71-100](file://src/utils/sanitize.ts#L71-L100)
+- [sanitize.ts:96-100](file://src/utils/sanitize.ts#L96-L100)
+- [SettingsPanel.tsx:167-175](file://src/components/SettingsPanel.tsx#L167-L175)
+- [ProjectionView.tsx:75-77](file://src/components/ProjectionView.tsx#L75-L77)
+
 ## Dependency Analysis
-The Settings Panel component exhibits strong cohesion within its domain while maintaining loose coupling with external systems.
+The Settings Panel component exhibits strong cohesion within its domain while maintaining loose coupling with external systems, enhanced with security-focused dependencies.
 
 ```mermaid
 graph LR
 subgraph "Internal Dependencies"
 SP[SettingsPanel.tsx]
 BG[BackgroundGallery.tsx]
+PV[ProjectionView.tsx]
 TS[TextStyle types]
 BS[BackgroundSettings types]
 IES[ImportExportSection]
 PDS[PurgeDataSection]
+SAN[sanitize.ts]
 end
 subgraph "External Dependencies"
 ZS[Zustand Store]
@@ -433,6 +503,8 @@ PR[Custom Protocol]
 I18N[Internationalization]
 end
 SP --> BG
+SP --> PV
+SP --> SAN
 SP --> IES
 SP --> PDS
 SP --> ZS
@@ -440,6 +512,7 @@ SP --> TS
 SP --> BS
 SP --> I18N
 BG --> EP
+PV --> SAN
 ZS --> EP
 EP --> DB
 DB --> PR
@@ -448,27 +521,32 @@ DB --> PR
 **Diagram sources**
 - [SettingsPanel.tsx:1-6](file://src/components/SettingsPanel.tsx#L1-L6)
 - [BackgroundGallery.tsx:1-3](file://src/components/BackgroundGallery.tsx#L1-L3)
+- [ProjectionView.tsx:1-2](file://src/components/ProjectionView.tsx#L1-L2)
+- [sanitize.ts:1-5](file://src/utils/sanitize.ts#L1-L5)
 - [appStore.ts:1-4](file://src/store/appStore.ts#L1-L4)
 - [preload.ts:1-48](file://electron/preload.ts#L1-L48)
 
 ### Coupling and Cohesion Analysis
 - **High internal cohesion**: All background and text styling logic is contained within the Settings Panel
 - **Moderate external coupling**: Reliant on Electron APIs and database operations
-- **Clean separation of concerns**: UI logic separated from data persistence
+- **Clean separation of concerns**: UI logic separated from data persistence and security validation
 - **Enhanced modularity**: New data management features are well-contained within dedicated sections
+- **Security-first design**: Centralized sanitization utilities provide consistent protection across components
 
 **Section sources**
-- [SettingsPanel.tsx:1-664](file://src/components/SettingsPanel.tsx#L1-L664)
+- [SettingsPanel.tsx:1-665](file://src/components/SettingsPanel.tsx#L1-L665)
 - [BackgroundGallery.tsx:1-99](file://src/components/BackgroundGallery.tsx#L1-L99)
+- [sanitize.ts:1-132](file://src/utils/sanitize.ts#L1-L132)
 
 ## Performance Considerations
-The Settings Panel implements several performance optimizations:
+The Settings Panel implements several performance optimizations with security considerations:
 
 ### Memory Management
 - **Lazy loading**: Background gallery images are loaded on demand
 - **Efficient state updates**: Partial updates minimize re-renders
 - **Image caching**: Custom protocol serves cached images with long cache headers
 - **Key-based optimization**: React keys prevent unnecessary re-renders during imports
+- **Sanitization caching**: Input validation results are computed once per render cycle
 
 ### Database Optimization
 - **BLOB storage**: Efficient binary storage for images
@@ -481,6 +559,7 @@ The Settings Panel implements several performance optimizations:
 - **Debounced operations**: Input validation prevents excessive updates
 - **Virtualized lists**: Large galleries use scrollable containers
 - **Async operations**: Non-blocking data import/export operations
+- **Secure rendering**: Sanitized inputs prevent expensive error recovery
 
 ## Troubleshooting Guide
 
@@ -492,11 +571,25 @@ The Settings Panel implements several performance optimizations:
 - Database corruption
 - Invalid image format
 - Protocol registration failure
+- **New**: Invalid image URL format blocked by sanitization
 
 **Solutions**:
 1. Verify database initialization: [initDatabase:26-41](file://electron/db.ts#L26-L41)
 2. Check protocol registration: [registerSchemesAsPrivileged:12-16](file://electron/main.ts#L12-L16)
 3. Validate image format support: [getMimeType:230-240](file://electron/db.ts#L230-L240)
+4. **Updated**: Check URL sanitization: [sanitizeImageUrl:71-90](file://src/utils/sanitize.ts#L71-L90)
+
+#### Overlay Opacity Display Issues
+**Symptoms**: Overlay appears incorrectly or causes rendering errors
+**Causes**:
+- Invalid opacity values outside 0-1 range
+- Non-numeric values passed to CSS
+- Browser-specific rendering differences
+
+**Solutions**:
+1. **New**: Verify numeric sanitization: [sanitizeNumber:96-100](file://src/utils/sanitize.ts#L96-L100)
+2. Check opacity value clamping in SettingsPanel: [line 174](file://src/components/SettingsPanel.tsx#L174)
+3. Validate ProjectionView usage: [line 75-77:75-77](file://src/components/ProjectionView.tsx#L75-L77)
 
 #### State Synchronization Problems
 **Symptoms**: Settings revert after restart
@@ -546,6 +639,19 @@ The Settings Panel implements several performance optimizations:
 2. Check purge-songs-only handler: [purge-songs-only:444-448](file://electron/main.ts#L444-L448)
 3. Ensure proper user confirmation flow: [confirmation dialogs:599-616](file://src/components/SettingsPanel.tsx#L599-L616)
 
+#### Security Validation Issues
+**Symptoms**: Background images not displaying, overlay opacity causing errors
+**Causes**:
+- Invalid URL formats rejected by sanitization
+- Out-of-range opacity values
+- Malformed CSS values
+
+**Solutions**:
+1. **New**: Check URL validation rules: [sanitizeImageUrl:71-90](file://src/utils/sanitize.ts#L71-L90)
+2. **New**: Verify numeric range enforcement: [sanitizeNumber:96-100](file://src/utils/sanitize.ts#L96-L100)
+3. **New**: Review safeBackgroundStyle utility: [safeBackgroundStyle:106-131](file://src/utils/sanitize.ts#L106-L131)
+4. **New**: Check component usage of sanitization functions: [SettingsPanel usage:167-175](file://src/components/SettingsPanel.tsx#L167-L175)
+
 **Section sources**
 - [db.ts:26-41](file://electron/db.ts#L26-L41)
 - [main.ts:12-16](file://electron/main.ts#L12-L16)
@@ -555,11 +661,12 @@ The Settings Panel implements several performance optimizations:
 - [main.ts:267-448](file://electron/main.ts#L267-L448)
 - [SettingsPanel.tsx:13-16](file://src/components/SettingsPanel.tsx#L13-L16)
 - [BackgroundGallery.tsx:14-16](file://src/components/BackgroundGallery.tsx#L14-L16)
+- [sanitize.ts:71-131](file://src/utils/sanitize.ts#L71-L131)
 
 ## Conclusion
 The Settings Panel component provides a comprehensive and user-friendly interface for configuring presentation backgrounds and text styling. Its architecture demonstrates excellent separation of concerns with clear integration points for state management, data persistence, and media handling. The component successfully balances functionality with performance through careful optimization of database operations, protocol-based image serving, and reactive state updates.
 
-**Updated**: The enhanced data management capabilities significantly improve the user experience by providing robust import/update functionality, comprehensive purge options, and detailed status feedback. The new gallery refresh mechanism ensures seamless data synchronization, while the modular design maintains clean separation between different functional areas.
+**Updated**: The enhanced data management capabilities significantly improve the user experience by providing robust import/update functionality, comprehensive purge options, and detailed status feedback. The new gallery refresh mechanism ensures seamless data synchronization, while the modular design maintains clean separation between different functional areas. **Additionally**, the comprehensive input validation and security measures protect against CSS injection attacks and ensure data integrity across all user interactions.
 
 The implementation showcases modern React patterns with TypeScript type safety, Electron IPC integration, and SQLite database utilization. The modular design allows for easy extension and maintenance while providing immediate visual feedback for all user interactions.
 
@@ -571,5 +678,7 @@ Key strengths include:
 - **Extensibility**: Clean architecture supports future enhancements
 - **Advanced data management**: Robust import/update/purge capabilities with detailed user feedback
 - **Enhanced reliability**: Improved state synchronization and error handling
+- **Security-first approach**: Comprehensive input validation prevents XSS and CSS injection attacks
+- **Robust error handling**: Graceful degradation with safe fallbacks for invalid inputs
 
-The component serves as a robust foundation for presentation customization in the LyricDeck application, providing both power users and casual users with the tools needed to create professional-looking presentations while offering advanced data management capabilities for complex workflows.
+The component serves as a robust foundation for presentation customization in the LyricDeck application, providing both power users and casual users with the tools needed to create professional-looking presentations while offering advanced data management capabilities and enterprise-grade security for complex workflows.

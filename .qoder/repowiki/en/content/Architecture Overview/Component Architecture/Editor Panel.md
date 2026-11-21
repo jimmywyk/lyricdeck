@@ -9,7 +9,15 @@
 - [ArrangePanel.tsx](file://src/components/ArrangePanel.tsx)
 - [App.tsx](file://src/App.tsx)
 - [README.md](file://README.md)
+- [sanitize.ts](file://src/utils/sanitize.ts)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Updated security section to document CSS injection vulnerability prevention
+- Added new Security and Validation section covering safe background styling
+- Updated SlidePreview component documentation to reflect secure background handling
+- Enhanced dependency analysis to include sanitize utility usage
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -17,21 +25,22 @@
 3. [Core Components](#core-components)
 4. [Architecture Overview](#architecture-overview)
 5. [Detailed Component Analysis](#detailed-component-analysis)
-6. [Dependency Analysis](#dependency-analysis)
-7. [Performance Considerations](#performance-considerations)
-8. [Troubleshooting Guide](#troubleshooting-guide)
-9. [Conclusion](#conclusion)
+6. [Security and Validation](#security-and-validation)
+7. [Dependency Analysis](#dependency-analysis)
+8. [Performance Considerations](#performance-considerations)
+9. [Troubleshooting Guide](#troubleshooting-guide)
+10. [Conclusion](#conclusion)
 
 ## Introduction
 The Editor Panel is the primary interface for creating and editing lyric sections within a song. It provides:
 - Rich text editing for lyrics
 - Section type management (Intro, Verse, Pre-Chorus, Chorus, Bridge, Instrumental, Outro, Custom)
 - Section creation, duplication, deletion, and modification workflows
-- Real-time preview of projected slides
+- Real-time preview of projected slides with secure background rendering
 - Integration with the Zustand store for persistent, reactive state updates
 - Internationalized user interface strings
 
-It also coordinates with other panels (notably Arrange) to support drag-and-drop reordering of sections within a song’s internal order, and integrates with the global projection system for live presentations.
+It also coordinates with other panels (notably Arrange) to support drag-and-drop reordering of sections within a song's internal order, and integrates with the global projection system for live presentations. The component implements comprehensive security measures to prevent CSS injection vulnerabilities through sanitized background styling.
 
 ## Project Structure
 The Editor Panel is organized as a single functional component that composes smaller subcomponents and relies on shared store and type definitions.
@@ -51,6 +60,9 @@ subgraph "Shared Types"
 T["types/index.ts"]
 I18N["i18n/en.ts"]
 end
+subgraph "Security Utilities"
+SU["sanitize.ts<br/>safeBackgroundStyle()"]
+end
 EP --> SE
 EP --> ASB
 EP --> SP
@@ -58,6 +70,7 @@ EP --> ZS
 SE --> ZS
 ASB --> ZS
 SP --> ZS
+SP --> SU
 EP --> T
 SE --> T
 ASB --> T
@@ -73,6 +86,7 @@ SP --> I18N
 - [appStore.ts:31-96](file://src/store/appStore.ts#L31-L96)
 - [index.ts:3-67](file://src/types/index.ts#L3-L67)
 - [en.ts:35-62](file://src/i18n/en.ts#L35-L62)
+- [sanitize.ts:106-131](file://src/utils/sanitize.ts#L106-L131)
 
 **Section sources**
 - [EditorPanel.tsx:17-118](file://src/components/EditorPanel.tsx#L17-L118)
@@ -84,7 +98,7 @@ SP --> I18N
 - EditorPanel: Hosts song metadata editing, section list rendering, and the right-side preview.
 - SectionEditor: Per-section editor with collapsible lyrics area, section type dropdown, label input, and delete button.
 - AddSectionButton: Dropdown menu to add new sections of predefined types.
-- SlidePreview: Live preview of projected slides based on current sections and presentation settings.
+- SlidePreview: Live preview of projected slides based on current sections and presentation settings with secure background rendering.
 
 These components are driven by Zustand actions for creating, updating, and deleting sections, and for updating song metadata.
 
@@ -100,6 +114,7 @@ The Editor Panel follows a unidirectional data flow:
 - These actions call Zustand store methods.
 - Store updates the in-memory state and persists to disk via Electron IPC.
 - Other views (Arrange, Present, Projection) subscribe to the same store and react to changes.
+- Background styles are processed through secure sanitization utilities before being applied.
 
 ```mermaid
 sequenceDiagram
@@ -107,6 +122,7 @@ participant U as "User"
 participant EP as "EditorPanel"
 participant SE as "SectionEditor"
 participant Z as "useAppStore"
+participant SU as "safeBackgroundStyle"
 participant FS as "Electron IPC"
 U->>EP : "Edit song metadata"
 EP->>Z : "updateSong(id, updates)"
@@ -124,11 +140,14 @@ U->>SE : "Delete section"
 SE->>Z : "deleteSection(songId, sectionId)"
 Z->>FS : "saveSongs(songs)"
 FS-->>Z : "ack"
+EP->>SU : "Get secure background style"
+SU-->>EP : "Sanitized CSS properties"
 ```
 
 **Diagram sources**
 - [EditorPanel.tsx:18-107](file://src/components/EditorPanel.tsx#L18-L107)
 - [appStore.ts:174-216](file://src/store/appStore.ts#L174-L216)
+- [sanitize.ts:106-131](file://src/utils/sanitize.ts#L106-L131)
 - [README.md:24](file://README.md#L24)
 
 ## Detailed Component Analysis
@@ -139,7 +158,7 @@ Responsibilities:
 - Renders metadata for key, tempo, and copyright.
 - Iterates over song.sections and renders a SectionEditor for each.
 - Provides an AddSectionButton to create new sections.
-- Displays a SlidePreview panel showing projected slides.
+- Displays a SlidePreview panel showing projected slides with secure background rendering.
 
 Key behaviors:
 - Uses the selected song from the store; if none is selected, displays a prompt.
@@ -165,7 +184,7 @@ Preview --> End(["Done"])
 
 ### SectionEditor
 Responsibilities:
-- Collapsible editor for a single section’s lyrics.
+- Collapsible editor for a single section's lyrics.
 - Dropdown to change section type from a fixed set.
 - Text input for the section label.
 - Delete button with confirmation.
@@ -221,26 +240,29 @@ Add --> Close["Close menu"]
 ### SlidePreview
 Responsibilities:
 - Visualizes how each section appears in projection.
-- Applies presentation background and text style overrides.
+- Applies secure presentation background and text style overrides using sanitized values.
 - Truncates lyrics to a preview length.
 
 Behavior:
 - Reads presentation settings from the selected song.
-- Computes background styles based on background type.
+- Computes secure background styles through safeBackgroundStyle utility.
 - Uses localized fallback text for empty lyrics.
+
+**Updated** Now uses secure safeBackgroundStyle() utility to prevent CSS injection vulnerabilities
 
 ```mermaid
 flowchart TD
 Start(["SlidePreview"]) --> GetSong["Get selected song"]
 GetSong --> GetPres["Read presentation settings"]
-GetPres --> ComputeBG["Compute background style"]
-ComputeBG --> Loop["For each section"]
+GetPres --> SecureBG["Call safeBackgroundStyle()"]
+SecureBG --> Loop["For each section"]
 Loop --> Render["Render slide with lyrics and label"]
 Render --> End(["Done"])
 ```
 
 **Diagram sources**
 - [EditorPanel.tsx:210-246](file://src/components/EditorPanel.tsx#L210-L246)
+- [sanitize.ts:106-131](file://src/utils/sanitize.ts#L106-L131)
 
 **Section sources**
 - [EditorPanel.tsx:210-246](file://src/components/EditorPanel.tsx#L210-L246)
@@ -261,7 +283,7 @@ Validation:
 - [en.ts:52-62](file://src/i18n/en.ts#L52-L62)
 
 ### Drag-and-Drop Reordering
-- Internal section ordering within a song is managed in the Editor Panel by the store’s reorderSections action.
+- Internal section ordering within a song is managed in the Editor Panel by the store's reorderSections action.
 - The Arrange Panel provides a separate drag-and-drop interface for building the presentation arrangement (order of slides during projection).
 - The Editor Panel does not implement drag-and-drop for reordering sections; that responsibility lies in ArrangePanel.
 
@@ -278,7 +300,7 @@ EP-->>U : "Sections reflect new order"
 ```
 
 **Diagram sources**
-- [ArrangePanel.tsx:54-63](file://src/components/ArrangePanel.tsx#L54-L63)
+- [ArrangePanel.tsx:54-63](file://src/components/ArrangePanel.tsx#L54-63)
 - [appStore.ts:222-225](file://src/store/appStore.ts#L222-L225)
 
 **Section sources**
@@ -289,7 +311,7 @@ EP-->>U : "Sections reflect new order"
 Actions used by EditorPanel:
 - updateSong: Updates song metadata and sections.
 - addSection: Creates a new section with a derived label.
-- updateSection: Updates a specific section’s fields.
+- updateSection: Updates a specific section's fields.
 - deleteSection: Removes a section and any references in arrangement.
 - reorderSections: Updates the internal order of sections.
 
@@ -342,11 +364,11 @@ Recommendations:
 ### State Management for Active Song Editing and Unsaved Changes
 - The store maintains selectedSongId to track the active song.
 - Every update triggers saveToDisk, persisting changes immediately.
-- There is no explicit “unsaved changes” indicator in the Editor Panel; persistence occurs after each edit.
+- There is no explicit "unsaved changes" indicator in the Editor Panel; persistence occurs after each edit.
 
 Implications:
 - Immediate persistence reduces risk of data loss.
-- No manual “Save” button is present; changes are reactive and persistent.
+- No manual "Save" button is present; changes are reactive and persistent.
 
 **Section sources**
 - [appStore.ts:174-180](file://src/store/appStore.ts#L174-L180)
@@ -373,25 +395,72 @@ Implications:
 - [appStore.ts:185-216](file://src/store/appStore.ts#L185-L216)
 - [README.md:24](file://README.md#L24)
 
+## Security and Validation
+
+### CSS Injection Prevention
+The Editor Panel implements comprehensive security measures to prevent CSS injection vulnerabilities through the secure `safeBackgroundStyle()` utility function.
+
+**Updated** Refactored to eliminate CSS injection vulnerability in background styling
+
+The security implementation includes:
+
+- **Color Validation**: Only allows safe CSS color formats (hex, rgb/rgba, hsl/hsla, named colors)
+- **Gradient Sanitization**: Validates gradient functions and blocks dangerous patterns like `expression(`, `javascript:`, `vbscript:`
+- **Image URL Filtering**: Restricts image sources to safe protocols (`lyricdeck-img://`) and approved data URLs
+- **Numeric Value Bounds**: Ensures numeric CSS values stay within safe ranges
+
+### Background Style Processing Flow
+```mermaid
+flowchart TD
+Start(["User Input"]) --> Parse["Parse background settings"]
+Parse --> ValidateType{"Validate type"}
+ValidateType --> |color| ColorSafe["sanitizeColor()"]
+ValidateType --> |gradient| GradientSafe["sanitizeGradient()"]
+ValidateType --> |image| ImageSafe["sanitizeImageUrl()"]
+ColorSafe --> BuildStyle["Build safe CSS object"]
+GradientSafe --> BuildStyle
+ImageSafe --> BuildStyle
+BuildStyle --> Apply["Apply to DOM"]
+```
+
+**Diagram sources**
+- [sanitize.ts:106-131](file://src/utils/sanitize.ts#L106-L131)
+- [EditorPanel.tsx:248-251](file://src/components/EditorPanel.tsx#L248-L251)
+
+### Security Benefits
+- **Input Sanitization**: All user-provided CSS values are validated before application
+- **Protocol Whitelisting**: Only trusted image protocols are allowed
+- **Pattern Blocking**: Dangerous CSS patterns are automatically rejected
+- **Fallback Safety**: Invalid values fall back to safe defaults
+
+**Section sources**
+- [sanitize.ts:1-132](file://src/utils/sanitize.ts#L1-L132)
+- [EditorPanel.tsx:248-251](file://src/components/EditorPanel.tsx#L248-L251)
+
 ## Dependency Analysis
 - EditorPanel depends on:
   - useAppStore for state and actions
   - i18n for localized strings
   - types for SectionType and LyricSection shape
+  - sanitize utility for secure background styling
 - SectionEditor and AddSectionButton are inline components within EditorPanel.
 - SlidePreview reads presentation settings and background configuration from the selected song.
+
+**Updated** Added sanitize utility dependency for security
 
 ```mermaid
 graph LR
 EP["EditorPanel.tsx"] --> ZS["appStore.ts"]
 EP --> T["types/index.ts"]
 EP --> I18N["i18n/en.ts"]
+EP --> SU["sanitize.ts"]
 SE["SectionEditor (inline)"] --> ZS
 SE --> T
 ASB["AddSectionButton (inline)"] --> ZS
 ASB --> T
 SP["SlidePreview (inline)"] --> ZS
 SP --> T
+SP --> SU
 ```
 
 **Diagram sources**
@@ -399,6 +468,7 @@ SP --> T
 - [appStore.ts:31-96](file://src/store/appStore.ts#L31-L96)
 - [index.ts:3-67](file://src/types/index.ts#L3-L67)
 - [en.ts:35-62](file://src/i18n/en.ts#L35-L62)
+- [sanitize.ts:106-131](file://src/utils/sanitize.ts#L106-L131)
 
 **Section sources**
 - [EditorPanel.tsx:17-118](file://src/components/EditorPanel.tsx#L17-L118)
@@ -408,8 +478,9 @@ SP --> T
 
 ## Performance Considerations
 - Immediate persistence on every change ensures data safety but may trigger frequent disk writes. Consider debouncing saves if performance becomes a concern.
-- SlidePreview computes styles per section; for very long section lists, consider virtualization or lazy rendering.
+- SlidePreview computes secure styles per section; for very long section lists, consider virtualization or lazy rendering.
 - The component uses controlled inputs; ensure large lyric blocks are edited efficiently by avoiding unnecessary re-renders.
+- Background style sanitization adds minimal overhead but provides essential security benefits.
 
 ## Troubleshooting Guide
 - No song selected:
@@ -417,7 +488,11 @@ SP --> T
 - Section deletion confirmation:
   - A browser confirmation dialog is shown before deletion; canceling prevents removal.
 - Persisted data not updating:
-  - Ensure the store’s saveToDisk mechanism is reachable (Electron IPC); otherwise, changes will not be persisted.
+  - Ensure the store's saveToDisk mechanism is reachable (Electron IPC); otherwise, changes will not be persisted.
+- Background styling issues:
+  - Verify that background settings conform to supported formats (color, gradient, image).
+  - Check that image URLs use approved protocols or data URLs.
+  - Review sanitize utility logs for rejected values.
 
 **Section sources**
 - [EditorPanel.tsx:22-28](file://src/components/EditorPanel.tsx#L22-L28)
@@ -425,4 +500,4 @@ SP --> T
 - [appStore.ts:379-383](file://src/store/appStore.ts#L379-L383)
 
 ## Conclusion
-The Editor Panel provides a focused, reactive interface for editing lyric sections with immediate persistence. It integrates tightly with the Zustand store to manage song metadata, sections, and previews. While it does not implement drag-and-drop reordering of sections internally, the Arrange Panel offers a complementary drag-and-drop mechanism for constructing presentation arrangements. The component is localized, validated minimally, and designed for straightforward, reliable lyric editing workflows.
+The Editor Panel provides a focused, reactive interface for editing lyric sections with immediate persistence and enhanced security. It integrates tightly with the Zustand store to manage song metadata, sections, and previews while implementing comprehensive CSS injection prevention through the secure safeBackgroundStyle() utility. The component now safely handles user-provided background configurations, validating colors, gradients, and image URLs to prevent malicious CSS injection attacks. While it does not implement drag-and-drop reordering of sections internally, the Arrange Panel offers a complementary drag-and-drop mechanism for constructing presentation arrangements. The component is localized, validated minimally, and designed for straightforward, reliable lyric editing workflows with robust security measures.

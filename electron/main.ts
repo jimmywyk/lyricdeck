@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, screen, dialog, protocol } from 'electron';
+import { app, BrowserWindow, ipcMain, screen, dialog, protocol, session } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { initDatabase, insertImage, getImage, listGalleryImages, deleteImage, getAllImagesForExport, importImage, upsertImage, getMimeType, purgeAllImages } from './db';
@@ -451,6 +451,11 @@ app.whenReady().then(async () => {
   // Initialize database and run migration
   await initDatabase();
   runMigration();
+
+  // Grant camera permission for the app's own windows (needed by the Visualizer)
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+    callback(permission === 'media');
+  });
 
   // Register protocol handler for serving images from SQLite
   protocol.handle('lyricdeck-img', (request) => {
